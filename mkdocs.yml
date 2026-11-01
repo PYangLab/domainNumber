@@ -3,7 +3,6 @@ use_directory_urls: false
 site_description: Benchmarking methods that estimate the number of spatial domains (k)
 repo_name: liuchunlei0430/kDomainBench
 repo_url: https://github.com/liuchunlei0430/kDomainBench
-site_url: https://liuchunlei0430.github.io/kDomainBench/
 edit_uri: ""
 docs_dir: docs
 site_dir: site

@@ -25,13 +25,21 @@ docs/, mkdocs.yml          documentation site (mkdocs-material)
 scripts/                   make_results_page.py, make_logo.py, check_docs.py
 ```
 
-Documentation: https://liuchunlei0430.github.io/kDomainBench/
+## Documentation
 
-## Docs
+The repository is private, so the documentation site is built and viewed locally:
 
 ```bash
-pip install "mkdocs-material==9.5.*" "mkdocstrings[python]"
-mkdocs serve                      # preview at http://127.0.0.1:8000
-mkdocs gh-deploy --force          # publish to GitHub Pages
-python scripts/check_docs.py --h5ad D1_151507_4k.h5ad --reuse <runs> --work /tmp/check   # run every doc example
+python -m venv .venv-docs && source .venv-docs/bin/activate
+pip install -r docs/requirements.txt
+mkdocs serve                      # open http://127.0.0.1:8000
+```
+
+On a remote server, forward the port first: `ssh -L 8000:127.0.0.1:8000 <user>@<server>`.
+`mkdocs build` writes a static copy to `site/`; open `site/index.html` directly (search needs `mkdocs serve`).
+
+Every code example of the docs can be executed with
+
+```bash
+python scripts/check_docs.py --h5ad D1_151507_4k.h5ad --reuse <finished runs> --work /tmp/check
 ```
