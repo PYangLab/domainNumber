@@ -1,0 +1,12 @@
+# build / cache
+site/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+# local run outputs and logs
+kdb_results/
+logs/
+# helpers only used to clone this machine's environments
+envs/kdb_r_activate.sh
+envs/prune_env.py
+envs/r_closure.R

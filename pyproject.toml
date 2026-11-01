@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kdomainbench"
+version = "0.1.0"
+description = "Benchmark of spatial-domain number (k) estimation methods with one interface"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["numpy", "pandas", "matplotlib", "scikit-learn", "anndata"]
+
+[project.optional-dependencies]
+docs = ["mkdocs-material>=9"]
+
+[project.scripts]
+kdomainbench = "kdomainbench.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+kdomainbench = ["methods/*.py", "methods/*.R", "methods/bnpspace_R/*"]
