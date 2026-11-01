@@ -15,8 +15,8 @@ hide:
 <p class="lp-sub">
   kDomainBench is a benchmark of methods that estimate the number of spatial
   domains (<em>k</em>) in spatial transcriptomics data. The <code>kdomainbench</code>
-  package runs 10 of them from Python, on a CPU or a GPU, and scores the
-  estimated <em>k</em> against the ground truth.
+  package runs 10 of them from Python and scores the estimated <em>k</em>
+  against the ground truth.
 </p>
 
 ```bash
@@ -68,10 +68,10 @@ pip install -e kdomainbench
 </a>
 </div>
 <div class="lp-card lp-card-link">
-<a class="lp-card-cover" href="tutorials/cpu_vs_gpu.html">
-<span class="lp-card-kicker">Device</span>
-<span class="lp-card-title">CPU or GPU</span>
-<span class="lp-card-desc">Run CellCharter, DeepST and SpatialDE2 on a CPU or a GPU with the same script.</span>
+<a class="lp-card-cover" href="guide/discover.html">
+<span class="lp-card-kicker">Discover</span>
+<span class="lp-card-title">Find a method</span>
+<span class="lp-card-desc">See what each method needs and how it picks the number of domains.</span>
 </a>
 </div>
 <div class="lp-card lp-card-link">
@@ -100,9 +100,9 @@ pip install -e kdomainbench
 <span class="lp-feat-desc">Six R methods (PRECAST, SC.MEB, BayesSpace, BNPSpace, DR.SC, iSC.MEB) and four Python methods (CellCharter, DeepST, SpaGCN, SpatialDE2) through <code>kdb.run</code>.</span>
 </div>
 <div class="lp-feat">
-<span class="lp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/></svg></span>
-<span class="lp-feat-title">CPU or GPU</span>
-<span class="lp-feat-desc">Set <code>device="cpu"</code> or <code>device="gpu"</code>. CellCharter, DeepST and SpatialDE2 can use a GPU; the other seven run on the CPU. The same environments work on both kinds of machine.</span>
+<span class="lp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+<span class="lp-feat-title">Reproducible environments</span>
+<span class="lp-feat-desc">The methods run in three environments, R, PyTorch and TensorFlow, with every package version locked. Every run uses the same software, and the method scripts are the benchmark's own.</span>
 </div>
 <div class="lp-feat">
 <span class="lp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></span>
