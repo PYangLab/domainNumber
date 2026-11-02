@@ -52,10 +52,9 @@ conda run -n kdb_py pip install --no-deps -e .
 ```
 
 !!! success "The same environments work on CPU and GPU machines"
-    There are no separate CPU and GPU environments. `kdb_py` has the CUDA 12.4 build of torch
-    and `kdb_spatialde` has `tensorflow[and-cuda]`. Both bring their CUDA runtime as pip wheels,
-    so a GPU machine needs only an NVIDIA driver (≥ 525), not a CUDA toolkit. Without a visible
-    GPU, torch and TensorFlow fall back to the CPU. Together they take about 12 GB of disk.
+    One set of environments serves both kinds of machine. On a GPU machine they need only an
+    NVIDIA driver (≥ 525): the GPU libraries come with the environments, so no separate CUDA
+    install is needed. Without a GPU, they run on the CPU. Together they take about 12 GB of disk.
 
 ### R
 
