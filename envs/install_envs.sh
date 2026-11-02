@@ -12,17 +12,17 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 CONDA="${CONDA:-$(command -v mamba || command -v conda)}"
 
 install_py() {
-  "$CONDA" env create -y $(target kdb_py) -f "$HERE/kdb_py.yml"
+  "$CONDA" env create $(target kdb_py) -f "$HERE/kdb_py.yml"
   "$(conda_prefix kdb_py)/bin/python" -m pip install --no-deps -e "$HERE/.."   # kdomainbench itself
 }
 
 install_spatialde() {
-  "$CONDA" env create -y $(target kdb_spatialde) -f "$HERE/kdb_spatialde.yml"
+  "$CONDA" env create $(target kdb_spatialde) -f "$HERE/kdb_spatialde.yml"
 }
 
 install_r() {
   # R 4.4.1 + toolchain from conda, then the locked CRAN/Bioconductor 3.19 packages into it.
-  "$CONDA" env create -y $(target kdb_r) -f "$HERE/kdb_r.yml"
+  "$CONDA" env create $(target kdb_r) -f "$HERE/kdb_r.yml"
   "$(conda_prefix kdb_r)/bin/Rscript" "$HERE/install_r_packages.R" "$HERE/kdb_r.lock.csv"
 }
 
