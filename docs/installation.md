@@ -107,19 +107,6 @@ kdomainbench check
 
 On a GPU machine, `kdomainbench check --gpu` should report `CUDA available: True` and `GPUs: 1`.
 
-??? note "Where kDomainBench looks for the environments"
-    By default it uses the conda environments `kdb_py` and `kdb_spatialde` under the usual conda
-    roots, and `Rscript` from `PATH`. Environment variables override each of them:
-
-    ```bash title="terminal"
-    export KDB_PY_PYTHON=/path/to/envs/kdb_py/bin/python
-    export KDB_SPATIALDE_PYTHON=/path/to/envs/kdb_spatialde/bin/python
-    export KDB_RSCRIPT=/path/to/bin/Rscript
-    export KDB_R_LIB=/path/to/isolated/R/library      # optional
-    ```
-
-    or, from Python, `kdb.set_env("r", "/usr/bin/Rscript", r_lib="/path/to/library")`.
-
 ## Get the data
 
 The tutorials use the DLPFC Visium sample **151507** from the spatialLIBD study
@@ -180,7 +167,7 @@ md5sum -c md5sums.txt          # every file: OK
 
 `FileNotFoundError: conda env 'kdb_py' not found` or `Rscript not found`
 :   kDomainBench did not find an environment. Create it (Step 2), or set the matching
-    `KDB_*` variable (see *Where kDomainBench looks for the environments* above).
+    `KDB_*` variable that points to it ([Environment variables](reference/setup.md#environment-variables)).
 
 PRECAST or iSC.MEB crash with a stack error
 :   Both need `ulimit -s unlimited`. kDomainBench sets it for them; if your hard limit forbids it,
