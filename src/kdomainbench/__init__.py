@@ -41,7 +41,7 @@ def run_all(h5ad, kmax=30, device="cpu", methods=None, out_root="kdb_results", *
 
     Examples
     --------
-    >>> results = kdb.run_all("D1_151507_4k.h5ad", kmax=30, out_root="out/")
+    >>> results = kdb.run_all("D1_151507_4k.h5ad", kmax=30)
     >>> results = kdb.run_all("D1_151507_4k.h5ad", methods=["DR.SC", "SC.MEB"])
     """
     from pathlib import Path

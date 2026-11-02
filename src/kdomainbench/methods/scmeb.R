@@ -15,7 +15,10 @@ set.seed(114)
 
 get_sc.meb_clusters <- function(h5ad_path, K_set = 5:7, platform = "Visium") { #platform = c("Visium", "ST")
   beta_grid = seq(0,4,0.2)
-  parallel = TRUE
+  # kdomainbench: serial by default, so set.seed(114) fixes the result. The PSOCK workers of
+  # parallel = TRUE do not inherit the seed (two runs on the same data gave k = 7 and k = 9).
+  # SCMEB_PARALLEL=TRUE restores the original, faster but non-reproducible setting.
+  parallel = as.logical(Sys.getenv("SCMEB_PARALLEL", unset = "FALSE"))
   # SC.MEB spawns num_core PSOCK workers over K_set. Total cores =
   # num_core x BLAS threads per worker, so the caller must also pin
   # OMP_NUM_THREADS/OPENBLAS_NUM_THREADS=1 for this to be the real budget.

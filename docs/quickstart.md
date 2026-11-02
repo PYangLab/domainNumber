@@ -42,7 +42,7 @@ runs on `D1_151507_4k.h5ad` ([Get the data](installation.md#get-the-data)).
     h5ad = "data/D1_151507_4k.h5ad"
 
     # 3. run a method
-    clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu", out_dir="out/SpaGCN")
+    clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu")
 
     # 4. score it against the ground truth
     kdb.evaluate(clusters, h5ad)
@@ -97,7 +97,7 @@ For your own data, see [Inputs](guide/run.md#inputs).
 `kdb.run` starts the method in its environment and returns one domain label per spot.
 
 ```python
-clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu", out_dir="out/SpaGCN")
+clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu")
 clusters.head(3)
 #                    cluster
 # spot_id
@@ -108,7 +108,7 @@ clusters["cluster"].nunique()     # estimated k
 # 4
 ```
 
-SpaGCN took 7.5 minutes on a CPU here. The run folder `out/SpaGCN/` keeps the labels, the
+SpaGCN took 7.5 minutes on a CPU here. The run folder `kdb_results/SpaGCN/D1_151507_4k_cpu/` keeps the labels, the
 method's log and `run_info.json` with the run time and peak memory.
 
 ??? note "Details"
@@ -141,7 +141,7 @@ kdb.pl.plot_spatial(clusters, h5ad, title="SpaGCN")
 After several runs, collect them into one table and plot the estimated k of every method:
 
 ```python
-summary = kdb.load_results("out/")
+summary = kdb.load_results("kdb_results")
 kdb.pl.plot_k_estimates(summary)       # one dot per run, the true k dashed
 ```
 
@@ -153,8 +153,8 @@ The same steps without Python:
 
 ```bash title="terminal"
 kdomainbench methods
-kdomainbench run -m SpaGCN -i data/D1_151507_4k.h5ad -k 30 -d cpu -o out/SpaGCN
-kdomainbench summarize out/ --csv summary.csv --plot k.png
+kdomainbench run -m SpaGCN -i data/D1_151507_4k.h5ad -k 30 -d cpu
+kdomainbench summarize --csv summary.csv --plot k.png
 ```
 
 ## Next steps

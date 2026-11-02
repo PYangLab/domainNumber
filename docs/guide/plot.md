@@ -8,10 +8,10 @@ estimated k of each method, run time and memory, and maps of the spatial domains
     import kdomainbench as kdb
     h5ad = "data/D1_151507_4k.h5ad"
 
-    summary = kdb.load_results("out/")
+    summary = kdb.load_results("kdb_results")
     kdb.pl.plot_k_estimates(summary)                          # estimated k per method
     kdb.pl.plot_runtime(summary)                              # run time, CPU vs GPU
-    kdb.pl.plot_spatial(kdb.read_clusters("out/SpaGCN"), h5ad)
+    kdb.pl.plot_spatial(kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu"), h5ad)
     ```
 
 All figures on this page come from the ten CPU runs on the 4k sample. Each function returns a
@@ -20,7 +20,7 @@ matplotlib axes or figure, so you can adjust and save it as usual.
 ## Step 1: Load a results table
 
 ```python
-summary = kdb.load_results("out/")
+summary = kdb.load_results("kdb_results")
 ```
 
 One row per run, scored against the ground truth ([Evaluate a run](evaluate.md#score-many-runs)
@@ -44,8 +44,8 @@ ax.figure.savefig("k_estimates.png", dpi=150, bbox_inches="tight")
 
 * Each dot is one run; methods are sorted by their median estimated k.
 * The dashed line is the true k (7), read from `k_true`. Pass `k_true=` to draw another.
-* Dots on the line found the right number of domains. Here DR.SC and SC.MEB did; BNPSpace,
-  PRECAST and iSC.MEB found far too few, and SpatialDE2 too many.
+* Dots on the line found the right number of domains. Here only DR.SC did; BNPSpace, PRECAST
+  and iSC.MEB found far too few, and SC.MEB and SpatialDE2 too many.
 
 ## Step 3: Run time and memory
 
@@ -64,14 +64,14 @@ side. `log=False` switches to a linear axis.
 One method:
 
 ```python
-clusters = kdb.read_clusters("out/SpaGCN")
+clusters = kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")
 kdb.pl.plot_spatial(clusters, h5ad, title="SpaGCN")
 ```
 
 Several methods side by side; `results` maps a name to its labels, as `kdb.run_all` returns:
 
 ```python
-results = {m: kdb.read_clusters(f"out/{m}/D1_151507_4k_cpu") for m in kdb.list_methods()}
+results = {m: kdb.read_clusters(f"kdb_results/{m}/D1_151507_4k_cpu") for m in kdb.list_methods()}
 fig = kdb.pl.plot_spatial_grid(results, h5ad, ncols=5)
 ```
 

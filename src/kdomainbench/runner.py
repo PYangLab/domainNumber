@@ -87,7 +87,7 @@ def run(method, h5ad, kmax=30, device="cpu", out_dir=None, gpu_id=0, verbose=Tru
 
     Examples
     --------
-    >>> clusters = kdb.run("SpaGCN", "D1_151507_4k.h5ad", kmax=30, out_dir="out/SpaGCN")
+    >>> clusters = kdb.run("SpaGCN", "D1_151507_4k.h5ad", kmax=30)
     >>> clusters["cluster"].nunique()
     4
     >>> kdb.run("CellCharter", "D1_151507_4k.h5ad", device="gpu", gpu_id=0)

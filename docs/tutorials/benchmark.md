@@ -50,7 +50,7 @@ run, data loading included; *peak RAM* is host memory only. The raw numbers are 
 
 ![Estimated k per method](../assets/k_estimates.png)
 
-* **DR.SC and SC.MEB** found exactly 7 domains.
+* **DR.SC** found exactly 7 domains, and **SC.MEB** 9.
 * **CellCharter, DeepST and SpaGCN** found 4, fewer than the 7 layers. DeepST still has the
   highest ARI (0.55): its 4 domains follow the layer boundaries well.
 * **SpatialDE2** split the tissue into 10 domains.
@@ -76,8 +76,9 @@ kdb.pl.plot_runtime(summary)
 
 ![Run time per method](../assets/runtime.png)
 
-iSC.MEB, SpaGCN, DR.SC and SC.MEB finished in under 10 minutes; PRECAST, SpatialDE2, DeepST
-and BayesSpace took about an hour each. BayesSpace needed the most memory (11.7 GB).
+iSC.MEB, SpaGCN and DR.SC finished in under 10 minutes, and CellCharter and SC.MEB in 15–18.
+PRECAST, SpatialDE2, DeepST and BayesSpace took about an hour each. BayesSpace needed the most
+memory (11.7 GB).
 
 !!! note "One dataset, one run"
     These numbers come from **one** dataset with one seed per method, on a shared 32-core

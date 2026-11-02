@@ -35,6 +35,7 @@ SKIP_SHELL = re.compile(r"--gpu|-d gpu|-m all|^(git|mamba|conda|bash|Rscript|exp
 os.environ["CUDA_VISIBLE_DEVICES"] = ""          # nothing in this process may touch a GPU
 import matplotlib  # noqa: E402
 matplotlib.use("Agg")
+import matplotlib.pyplot  # noqa: E402
 import kdomainbench as kdb  # noqa: E402
 from kdomainbench import runner  # noqa: E402
 
@@ -67,6 +68,8 @@ def stub_run(method, h5ad, kmax=30, device="cpu", out_dir=None, gpu_id=0, verbos
         _cache[m.name] = src
     src = _cache[m.name]
     if src != out:
+        if src in out.parents:
+            raise RuntimeError(f"{out} lies inside the run folder {src}; the docs nest run folders")
         shutil.copytree(src, out, dirs_exist_ok=True)
     note(f"reused {m.name} run ({'GPU not run; CPU result' if device == 'gpu' else 'cpu'}) -> {out}")
     return kdb.read_clusters(out)
@@ -160,11 +163,13 @@ def main():
     work.mkdir(parents=True, exist_ok=True)
     kdb.run = stub_run                     # run_all looks `run` up in the package namespace
     results = {}
-    targets = [(p, list(blocks(p))) for p in PAGES] + [("docstrings", [("python", c) for _, c in docstring_examples()])]
+    pages = ARGS.pages or PAGES
+    targets = [(p, list(blocks(p))) for p in pages if p != "docstrings"] + ([("docstrings", [("python", c) for _, c in docstring_examples()])]
+                                                         if not ARGS.pages or "docstrings" in ARGS.pages else [])
     for page, bl in targets:
         # Get started pages build on each other (out/ from "Run a method" feeds the next pages),
         # as for a reader who follows them in order; tutorials and docstrings start fresh.
-        shared = page in ("installation.md", "quickstart.md") or page.startswith("guide/")
+        shared = page in ("installation.md", "quickstart.md", "reference/setup.md") or page.startswith("guide/")
         d = work / ("getstarted" if shared else page.replace("/", "_").replace(".md", ""))
         (d / "data").mkdir(parents=True, exist_ok=True)
         for link in (d / "data" / ARGS.h5ad.name, d / ARGS.h5ad.name):
@@ -172,6 +177,8 @@ def main():
                 link.symlink_to(ARGS.h5ad.resolve())
         os.chdir(d)
         ns = {"__name__": "__docs__"}
+        if page == "docstrings":            # docstring examples assume `import kdomainbench as kdb`
+            ns["kdb"] = kdb
         print(f"\n=== {page}: {len(bl)} blocks", flush=True)
         for i, (kind, code) in enumerate(bl, 1):
             label = f"{page}#{i}"
@@ -180,6 +187,7 @@ def main():
             if ok and kind == "python":
                 last_value(code, ns)
             results[label] = ok
+            matplotlib.pyplot.close("all")
             note("OK" if ok else "*** FAILED ***")
     failed = [k for k, v in results.items() if not v]
     print(f"\n{len(results) - len(failed)}/{len(results)} blocks OK" + (f"; failed: {failed}" if failed else ""))
@@ -191,6 +199,7 @@ if __name__ == "__main__":
     ap.add_argument("--h5ad", type=Path, required=True)
     ap.add_argument("--reuse", type=Path, required=True)
     ap.add_argument("--work", type=Path, required=True)
+    ap.add_argument("--pages", nargs="*", help="only these pages (e.g. reference/setup.md docstrings)")
     ARGS = ap.parse_args()
     ARGS.reuse = ARGS.reuse.resolve()
     main()

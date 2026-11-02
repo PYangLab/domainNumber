@@ -55,6 +55,8 @@ def _run(args):
 def _summarize(args):
     from .results import k_accuracy, load_results
     df = load_results(args.root)
+    if df.empty:
+        sys.exit(f"no runs found under {args.root!r} (looked for run_info.json files)")
     print(df.to_string(index=False))
     if args.csv:
         df.to_csv(args.csv, index=False)

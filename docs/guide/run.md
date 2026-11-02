@@ -8,15 +8,15 @@ and returns one domain label per spot.
     import kdomainbench as kdb
     h5ad = "data/D1_151507_4k.h5ad"
 
-    clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu", out_dir="out/SpaGCN")
+    clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu")
     clusters = kdb.run("CellCharter", h5ad, kmax=30, device="gpu", gpu_id=0)
-    results  = kdb.run_all(h5ad, kmax=30, out_root="out/")      # all ten
+    results  = kdb.run_all(h5ad, kmax=30)      # all ten
     ```
 
 ## Run one method
 
 ```python
-clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu", out_dir="out/SpaGCN")
+clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu")
 ```
 
 | Argument | Meaning |
@@ -52,7 +52,7 @@ The number of distinct labels is the method's estimated k (here 4).
 The run folder keeps everything about the run:
 
 ```text
-out/SpaGCN/
+kdb_results/SpaGCN/D1_151507_4k_cpu/
 ├── cluster_results.csv   # spot_id,cluster
 ├── run.log               # everything the method printed
 └── run_info.json         # see below
@@ -77,7 +77,7 @@ out/SpaGCN/
 ```
 
 `wall_time_s` is the whole run, data loading included. `peak_rss_mb` is the peak host memory of
-the method's process; GPU memory is not included. `kdb.read_clusters("out/SpaGCN")` reads the
+the method's process; GPU memory is not included. `kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")` reads the
 labels back later.
 
 ??? note "When a method fails"
@@ -93,12 +93,12 @@ labels back later.
 ## Run several methods
 
 ```python
-results = kdb.run_all(h5ad, kmax=30, device="cpu", out_root="out/")
+results = kdb.run_all(h5ad, kmax=30, device="cpu")
 # {'PRECAST': <clusters>, 'SC.MEB': <clusters>, ...}
-results = kdb.run_all(h5ad, methods=["DR.SC", "SC.MEB"], out_root="out/")
+results = kdb.run_all(h5ad, methods=["DR.SC", "SC.MEB"])
 ```
 
-Each method gets its own run folder, `out/<method>/<dataset>_<device>`. `run_all` reports a
+Each method gets its own run folder, `kdb_results/<method>/<dataset>_<device>`. `run_all` reports a
 failed method and goes on with the next one. The methods run one after another.
 
 ## Inputs
@@ -170,12 +170,14 @@ How the device is passed to each method is in
 ## Command line
 
 ```bash title="terminal"
-kdomainbench run -m SpaGCN -i data/D1_151507_4k.h5ad -k 30 -d cpu -o out/SpaGCN
-kdomainbench run -m CellCharter DeepST -i data/D1_151507_4k.h5ad -d gpu --gpu-id 0 -o out/
-kdomainbench run -m all -i data/D1_151507_4k.h5ad -d cpu -o out/
+kdomainbench run -m SpaGCN -i data/D1_151507_4k.h5ad -k 30 -d cpu
+kdomainbench run -m CellCharter DeepST -i data/D1_151507_4k.h5ad -d gpu --gpu-id 0
+kdomainbench run -m all -i data/D1_151507_4k.h5ad -d cpu
 ```
 
-With one method, `-o` is its run folder. With several, each method writes to `<-o>/<method>`, and
-with `-m all` to `<-o>/<method>/<dataset>_<device>`.
+Without `-o`, every run goes to `kdb_results/<method>/<dataset>_<device>`, as from Python, and
+`kdomainbench summarize` reads `kdb_results/` by default. `-o DIR` changes the place: with one
+method `DIR` is its run folder, with several each method writes to `DIR/<method>`, and with
+`-m all` to `DIR/<method>/<dataset>_<device>`.
 
 Next: [evaluate the run](evaluate.md).

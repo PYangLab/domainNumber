@@ -28,8 +28,8 @@ kdb.get_method("DR.SC").uses_kmax        # True
 
 ```python
 h5ad = "data/D1_151507_4k.h5ad"
-clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu", out_dir="out/SpaGCN")
-results = kdb.run_all(h5ad, kmax=30, device="gpu", gpu_id=0, out_root="out/")
+clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu")
+results = kdb.run_all(h5ad, kmax=30, device="gpu", gpu_id=0)
 ```
 
 ## 3. Scores
@@ -43,8 +43,8 @@ results = kdb.run_all(h5ad, kmax=30, device="gpu", gpu_id=0, out_root="out/")
 | [`kdb.k_accuracy(summary)`](reference/scores.md#kdomainbench.k_accuracy) | One row per method: mean \|k error\|, exact-k rate, mean ARI. |
 
 ```python
-kdb.evaluate(kdb.read_clusters("out/SpaGCN"), h5ad)
-summary = kdb.load_results("out/")
+kdb.evaluate(kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu"), h5ad)
+summary = kdb.load_results("kdb_results")
 kdb.k_accuracy(summary)
 ```
 

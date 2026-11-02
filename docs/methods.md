@@ -42,7 +42,7 @@ back to the CPU when no GPU is visible.
 | Method | Env | GPU | Model | How k is selected | Key settings |
 |---|---|:---:|---|---|---|
 | [PRECAST](https://feiyoung.github.io/PRECAST/) | `kdb_r` | – | Spatial factor model + hidden Markov random field (HMRF) | Fits K = 2 … kmax, picks one with a modified BIC (`SelectModel`) | 2000 HVGs, Visium neighbours, `maxIter=30` |
-| [SC.MEB](https://shufeyangyi2015310117.github.io/SC.MEB/) | `kdb_r` | – | HMRF on 15 principal components | Fits K = 2 … kmax, picks one by BIC (`selectK`) | β grid 0–4 (step 0.2) |
+| [SC.MEB](https://shufeyangyi2015310117.github.io/SC.MEB/) | `kdb_r` | – | HMRF on 15 principal components | Fits K = 2 … kmax, picks one by BIC (`selectK`) | β grid 0–4 (step 0.2), serial |
 | [BayesSpace](https://www.ezstatconsulting.com/BayesSpace/) | `kdb_r` | – | Bayesian spatial clustering with a Potts prior | `qTune` log-likelihood for q = 2 … kmax; the elbow (minimum second difference) is q | 15 PCs, 2000 HVGs, γ = 3, 50 000 MCMC iterations |
 | [BNPSpace](https://github.com/new-zbc/BNPSpace) | `kdb_r` | – | Bayesian nonparametric count model with feature selection | Clusters left non-empty after MCMC, starting from K = kmax | 300 MCMC iterations, lattice neighbours |
 | [DR.SC](https://feiyoung.github.io/DR.SC/) | `kdb_r` | – | Joint dimension reduction + spatial clustering | Fits K = 2 … kmax, picks one with a modified BIC | 500 HVGs |
@@ -53,8 +53,7 @@ back to the CPU when no GPU is visible.
 | [SpatialDE2](https://github.com/PMBio/SpatialDE) | `kdb_spatialde` | ✓ | Spatially variable genes + Bayesian tissue segmentation | Variational segmentation with up to kmax classes; empty classes are pruned | 2000 SVGs (padj < 0.001), seed 42 |
 
 SpaGCN is written in PyTorch but always runs on the CPU, as in the original benchmark scripts.
-PRECAST and SC.MEB fork workers over the K grid: `PRECAST_CORES` (default 4) and `SCMEB_CORES`
-(default 3) cap them.
+PRECAST forks workers over the K grid; `PRECAST_CORES` (default 4) caps them.
 
 ## Method scripts
 
@@ -68,6 +67,10 @@ only these changes:
 * `bayesspace.R`: copies `array_row` / `array_col` into `row` / `col`. BayesSpace 1.14
   (Bioconductor 3.19, the version in `kdb_r`) reads `row` / `col`; ≥ 1.16 reads
   `array_row` / `array_col`. Both end up with the same coordinates.
+* `scmeb.R`: runs SC.MEB serially (`parallel = FALSE`). The original runs each K in a parallel
+  worker, and the workers do not inherit `set.seed(114)`, so two runs on the same data gave
+  different k (7 and 9). Serial runs give the same result every time, at the cost of time.
+  `SCMEB_PARALLEL=TRUE` (with `SCMEB_CORES` workers, default 3) restores the original setting.
 * The Python scripts have a `run_` prefix. Without it, `cellcharter.py` would import itself
   instead of the `cellcharter` package.
 

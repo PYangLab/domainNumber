@@ -91,6 +91,6 @@ has each method's model, criterion and settings.
 ## Before running
 
 * Run times differ a lot. On the 4k sample on a CPU, PRECAST, BayesSpace, BNPSpace, DeepST and
-  SpatialDE2 took 40–75 minutes each, CellCharter about 15, and DR.SC, SC.MEB, SpaGCN and
+  SpatialDE2 took 40–75 minutes each, CellCharter and SC.MEB 15–18, and DR.SC, SpaGCN and
   iSC.MEB under 10. [Benchmark the ten methods](../tutorials/benchmark.md) lists every run time and peak memory.
 * Next: [run a method](run.md).

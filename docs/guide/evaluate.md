@@ -8,16 +8,16 @@ the estimated k is from the true k, and how well the domains match the annotated
     import kdomainbench as kdb
     h5ad = "data/D1_151507_4k.h5ad"
 
-    clusters = kdb.read_clusters("out/SpaGCN")       # or the return value of kdb.run
+    clusters = kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")       # or the return value of kdb.run
     kdb.evaluate(clusters, h5ad)                     # one run
-    summary = kdb.load_results("out/")               # every run under out/, scored
+    summary = kdb.load_results("kdb_results")               # every run under kdb_results/, scored
     kdb.k_accuracy(summary)                          # one row per method
     ```
 
 ## Score one run
 
 ```python
-clusters = kdb.read_clusters("out/SpaGCN")
+clusters = kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")
 kdb.evaluate(clusters, h5ad)
 # {'k_estimated': 4, 'k_true': 7, 'k_error': -3,
 #  'ARI': 0.42, 'NMI': 0.51, 'n_spots': 4220}
@@ -57,7 +57,7 @@ kdb.evaluate(clusters, truth)
 against its own `.h5ad` file. The result has one row per run:
 
 ```python
-summary = kdb.load_results("out/")
+summary = kdb.load_results("kdb_results")
 summary[["method", "device_used", "k_estimated", "k_true", "k_error",
          "ARI", "NMI", "wall_time_s", "peak_rss_mb"]]
 #         method device_used  k_estimated  k_true  k_error   ARI   NMI  wall_time_s  peak_rss_mb
@@ -67,7 +67,7 @@ summary[["method", "device_used", "k_estimated", "k_true", "k_error",
 #          DR.SC         cpu            7       7        0  0.47  0.58       460.59       2378.4
 #         DeepST         cpu            4       7       -3  0.55  0.68      3233.28       2932.7
 #        PRECAST         cpu            2       7       -5  0.17  0.31      4362.37       3529.8
-#         SC.MEB         cpu            7       7        0  0.41  0.53       588.43       2649.6
+#         SC.MEB         cpu            9       7        2  0.41  0.53      1069.73       2711.6
 #         SpaGCN         cpu            4       7       -3  0.42  0.51       451.18       1413.9
 #     SpatialDE2         cpu           10       7        3  0.41  0.57      4156.90       2900.3
 #        iSC.MEB         cpu            2       7       -5  0.18  0.33       203.39       2939.3
@@ -80,7 +80,7 @@ kdb.k_accuracy(summary)
 #              runs  mean_abs_k_error  exact_rate  mean_ARI
 # method
 # DR.SC           1               0.0         1.0      0.47
-# SC.MEB          1               0.0         1.0      0.41
+# SC.MEB          1               2.0         0.0      0.41
 # DeepST          1               3.0         0.0      0.55
 # CellCharter     1               3.0         0.0      0.49
 # SpaGCN          1               3.0         0.0      0.42
@@ -102,7 +102,7 @@ kdb.k_accuracy(summary)
     * Failed runs stay in `summary` with `success = False`; `k_accuracy` leaves them out.
     * `load_results(root, truth_key="layer_guess")` scores against another `obs` column;
       `score=False` skips scoring and only collects the run records.
-    * `kdomainbench summarize out/ --csv summary.csv` prints both tables from the command line.
+    * `kdomainbench summarize --csv summary.csv` prints both tables from the command line.
 
 ## Are the numbers comparable?
 
@@ -110,6 +110,9 @@ kdb.k_accuracy(summary)
   between runs on the same machine, ideally run one at a time.
 * **One run per method** does not show how much a method varies. Several methods are stochastic
   (MCMC, neural-network training); repeat runs, or several datasets, before ranking them.
+  The scripts fix their random seeds where the method allows it. SC.MEB, run in parallel as in
+  the original script, found k = 7 in one run and k = 9 in another, so kDomainBench runs it
+  serially ([Method scripts](../methods.md#method-scripts)).
 * **`kmax`** changes the answer of the eight methods that use it. Keep it the same across methods
   (the benchmark uses 30).
 

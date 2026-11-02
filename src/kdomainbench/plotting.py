@@ -3,6 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+def _successful(summary):
+    if summary.empty or not summary["success"].astype(bool).any():
+        raise ValueError("no successful runs in the summary table; check the folder given to load_results")
+    return summary[summary["success"].astype(bool)]
+
+
 def plot_k_estimates(summary, ax=None, k_true=None):
     """Plot the estimated k of each method.
 
@@ -22,12 +28,17 @@ def plot_k_estimates(summary, ax=None, k_true=None):
     -------
     matplotlib.axes.Axes
 
+    Raises
+    ------
+    ValueError
+        ``summary`` has no successful run.
+
     Examples
     --------
     >>> ax = kdb.pl.plot_k_estimates(summary)
     >>> ax.figure.savefig("k_estimates.png", dpi=150, bbox_inches="tight")
     """
-    ok = summary[summary["success"]].copy()
+    ok = _successful(summary).copy()
     order = ok.groupby("method")["k_estimated"].median().sort_values().index
     ax = ax or plt.subplots(figsize=(max(5, 0.6 * len(order) + 2), 3.5))[1]
     for i, m in enumerate(order):
@@ -61,12 +72,17 @@ def plot_runtime(summary, metric="wall_time_s", ax=None, log=True):
     -------
     matplotlib.axes.Axes
 
+    Raises
+    ------
+    ValueError
+        ``summary`` has no successful run.
+
     Examples
     --------
     >>> kdb.pl.plot_runtime(summary)
     >>> kdb.pl.plot_runtime(summary, metric="peak_rss_mb", log=False)
     """
-    ok = summary[summary["success"]]
+    ok = _successful(summary)
     tab = ok.pivot_table(index="method", columns="device_used", values=metric, aggfunc="mean")
     tab = tab.loc[tab.mean(axis=1).sort_values().index]
     ax = ax or plt.subplots(figsize=(max(5, 0.6 * len(tab) + 2), 3.5))[1]
@@ -101,7 +117,7 @@ def plot_spatial(clusters, h5ad, ax=None, title=None, s=8, spatial_key="spatial"
 
     Examples
     --------
-    >>> kdb.pl.plot_spatial(kdb.read_clusters("out/SpaGCN"), "D1_151507_4k.h5ad")
+    >>> kdb.pl.plot_spatial(kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu"), "D1_151507_4k.h5ad")
     """
     import anndata as ad
     adata = ad.read_h5ad(h5ad, backed="r")
@@ -143,7 +159,7 @@ def plot_spatial_grid(results, h5ad, ncols=5, s=4):
 
     Examples
     --------
-    >>> results = kdb.run_all("D1_151507_4k.h5ad", out_root="out/")
+    >>> results = kdb.run_all("D1_151507_4k.h5ad")
     >>> kdb.pl.plot_spatial_grid(results, "D1_151507_4k.h5ad").savefig("domains.png")
     """
     n = len(results)

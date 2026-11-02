@@ -175,5 +175,5 @@ Installing `louvain` fails
 :   SpaGCN needs `louvain`, which has no wheel for Python 3.12 and is built from source. `pip`
     needs a C++ compiler and `cmake` on `PATH`.
 
-PRECAST or SC.MEB use too many cores
-:   They fork workers. `PRECAST_CORES` and `SCMEB_CORES` cap them (defaults 4 and 3).
+PRECAST uses too many cores
+:   It forks workers; `PRECAST_CORES` caps them (default 4).

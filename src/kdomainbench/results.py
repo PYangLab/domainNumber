@@ -20,7 +20,7 @@ def read_clusters(path):
 
     Examples
     --------
-    >>> clusters = kdb.read_clusters("out/SpaGCN")
+    >>> clusters = kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")
     >>> clusters["cluster"].nunique()
     4
     """
@@ -129,7 +129,7 @@ def load_results(root="kdb_results", truth_key="clusters", score=True):
 
     Examples
     --------
-    >>> summary = kdb.load_results("out/")
+    >>> summary = kdb.load_results("kdb_results")
     >>> summary[["method", "k_estimated", "k_error", "ARI", "wall_time_s"]]
     """
     rows, truths = [], {}
@@ -172,7 +172,7 @@ def k_accuracy(summary):
 
     Examples
     --------
-    >>> kdb.k_accuracy(kdb.load_results("out/"))
+    >>> kdb.k_accuracy(kdb.load_results("kdb_results"))
     """
     ok = summary[summary["success"] & summary["k_true"].notna()]
     return (ok.assign(abs_err=ok["k_error"].abs(), exact=ok["k_error"].eq(0))
