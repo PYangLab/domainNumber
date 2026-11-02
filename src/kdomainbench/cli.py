@@ -93,7 +93,10 @@ def main(argv=None):
     s.add_argument("--plot", help="save k-estimate figure (png/pdf)")
     s.set_defaults(fn=_summarize)
     args = p.parse_args(argv)
-    args.fn(args)
+    try:
+        args.fn(args)
+    except (ValueError, FileNotFoundError, RuntimeError) as e:   # RuntimeError covers MethodFailed
+        sys.exit(f"kdomainbench: error: {e}")
 
 
 if __name__ == "__main__":

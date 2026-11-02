@@ -95,6 +95,9 @@ def run(method, h5ad, kmax=30, device="cpu", out_dir=None, gpu_id=0, verbose=Tru
     m = get_method(method)
     if device not in ("cpu", "gpu"):
         raise ValueError("device must be 'cpu' or 'gpu'")
+    h5ad = Path(h5ad).resolve()
+    if not h5ad.exists():
+        raise FileNotFoundError(f"input file not found: {h5ad}")
     used = device
     if device == "gpu" and not m.gpu:
         warnings.warn(f"{m.name} has no GPU implementation; running it on the CPU.", stacklevel=2)
@@ -102,9 +105,6 @@ def run(method, h5ad, kmax=30, device="cpu", out_dir=None, gpu_id=0, verbose=Tru
     if not m.uses_kmax and verbose:
         print(f"[kdomainbench] note: {m.name} selects k by itself; kmax={kmax} is not used.")
 
-    h5ad = Path(h5ad).resolve()
-    if not h5ad.exists():
-        raise FileNotFoundError(h5ad)
     out = Path(out_dir or Path("kdb_results") / m.name / f"{h5ad.stem}_{device}").resolve()
     out.mkdir(parents=True, exist_ok=True)
 

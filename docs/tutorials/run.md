@@ -60,31 +60,36 @@ kdb_results/SpaGCN/D1_151507_4k_cpu/
 
 ```json title="run_info.json"
 {
- "method": "SpaGCN",
- "dataset": "D1_151507_4k",
- "kmax": 30,
- "device_requested": "cpu",
- "device_used": "cpu",
- "gpu_id": null,
- "returncode": 0,
- "wall_time_s": 451.18,
- "peak_rss_mb": 1413.9,
- "started": "2026-10-29T11:02:55",
- "success": true,
- "n_spots": 4220,
- "k_estimated": 4
+  "method": "SpaGCN",
+  "dataset": "D1_151507_4k",
+  "h5ad": "/path/to/kDomainBench/data/D1_151507_4k.h5ad",
+  "kmax": 30,
+  "device_requested": "cpu",
+  "device_used": "cpu",
+  "gpu_id": null,
+  "returncode": 0,
+  "wall_time_s": 451.18,
+  "peak_rss_mb": 1413.9,
+  "started": "2026-10-29T11:02:55",
+  "command": ["/path/to/envs/kdb_py/bin/python", "/path/to/methods/run_spagcn.py",
+              "--data_path", "/path/to/kDomainBench/data/D1_151507_4k.h5ad",
+              "--save_path", "/path/to/kdb_results/SpaGCN/D1_151507_4k_cpu/cluster_results.csv"],
+  "success": true,
+  "n_spots": 4220,
+  "k_estimated": 4
 }
 ```
 
 `wall_time_s` is the whole run, data loading included. `peak_rss_mb` is the peak host memory of
-the method's process; GPU memory is not included. `kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")` reads the
-labels back later.
+the method's process; GPU memory is not included. `command` is the exact call, to rerun the
+method by hand. `kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")` reads the labels back
+later.
 
 ??? note "When a method fails"
     `kdb.run` raises `kdb.MethodFailed`. The message names the log and ends with its last lines:
 
     ```text
-    MethodFailed: BayesSpace failed (exit 1); see out/BayesSpace/run.log
+    MethodFailed: BayesSpace failed (exit 1); see /path/to/kdb_results/BayesSpace/D1_151507_4k_cpu/run.log
     ...
     ```
 
@@ -139,7 +144,7 @@ Then run it like the tutorial data. Without `obs["clusters"]`, kDomainBench stil
 estimated k, run time and memory, but cannot score the labels.
 
 ??? note "Other platforms than Visium"
-    The R scripts build Visium (hexagonal) neighbour graphs, and CellCharter uses a 6-neighbour
+    The R scripts build Visium (hexagonal) neighbor graphs, and CellCharter uses a 6-neighbor
     grid. For ST, Slide-seq or imaging data, change the `platform` argument in the R scripts
     under `src/kdomainbench/methods/`, or the CellCharter `spatial_neighbors` call.
 

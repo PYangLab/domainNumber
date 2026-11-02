@@ -54,7 +54,7 @@ lines = ["| Method | Device | GPU support | k estimated | k error | ARI | NMI | 
 for r in ok.sort_values(["method", "device_used"]).itertuples():
     lines.append(f"| {r.method} | {r.device_used.upper()} | {'✓' if r.method in gpu_methods else '–'} | "
                  f"{r.k_estimated} | {int(r.k_error):+d} | {fmt(r.ARI)} | {fmt(r.NMI)} | "
-                 f"{r.wall_time_s:.0f} | {r.peak_rss_mb / 1024:.1f} |")
+                 f"{r.wall_time_s:.0f} | {r.peak_rss_mb / 1000:.1f} |")
 failed = summary[~summary["success"]]
 if len(failed):
     lines += ["", "Failed runs: " + ", ".join(f"{r.method} ({r.device_used})" for r in failed.itertuples())]

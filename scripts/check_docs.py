@@ -26,7 +26,7 @@ import warnings
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BASICS = ["tutorials/discover.md", "tutorials/run.md", "tutorials/evaluate.md", "tutorials/plot.md"]
+BASICS = ["tutorials/discover.md", "tutorials/run.md", "tutorials/evaluate.md"]
 PAGES = ["installation.md", "quickstart.md", *BASICS, "tutorials/benchmark.md", "api.md", "reference/setup.md"]
 FAST = {"SpaGCN", "DR.SC", "SC.MEB", "iSC.MEB"}
 SKIP_SHELL = re.compile(r"--gpu|-d gpu|-m all|^(git|mamba|conda|bash|Rscript|export|nvidia-smi|wget|"
@@ -167,8 +167,9 @@ def main():
     targets = [(p, list(blocks(p))) for p in pages if p != "docstrings"] + ([("docstrings", [("python", c) for _, c in docstring_examples()])]
                                                          if not ARGS.pages or "docstrings" in ARGS.pages else [])
     for page, bl in targets:
-        # Get started pages build on each other (out/ from "Run a method" feeds the next pages),
-        # as for a reader who follows them in order; tutorials and docstrings start fresh.
+        # Installation, Quickstart and the step-by-step tutorials share one folder (kdb_results/ from
+        # "Run a method" feeds "Evaluate a run"), as for a reader who follows them in order; the
+        # benchmark tutorial and the docstrings start fresh.
         shared = page in ("installation.md", "quickstart.md", "reference/setup.md", *BASICS)
         d = work / ("getstarted" if shared else page.replace("/", "_").replace(".md", ""))
         (d / "data").mkdir(parents=True, exist_ok=True)
@@ -200,6 +201,9 @@ if __name__ == "__main__":
     ap.add_argument("--reuse", type=Path, required=True)
     ap.add_argument("--work", type=Path, required=True)
     ap.add_argument("--pages", nargs="*", help="only these pages (e.g. reference/setup.md docstrings)")
+    ap.add_argument("--fast", nargs="*", default=sorted(FAST),
+                    help=f"methods that really run (default: {' '.join(sorted(FAST))}); the rest reuse --reuse")
     ARGS = ap.parse_args()
+    FAST = set(ARGS.fast)
     ARGS.reuse = ARGS.reuse.resolve()
     main()

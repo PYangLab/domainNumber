@@ -11,8 +11,8 @@ clusters = kdb.run("CellCharter", "D1_151507_4k.h5ad", kmax=30, device="gpu")   
 * 10 methods: PRECAST, SC.MEB, BayesSpace, BNPSpace, DR.SC, iSC.MEB (R); CellCharter, DeepST,
   SpaGCN, SpatialDE2 (Python).
 * GPU: CellCharter, DeepST and SpatialDE2. With `device="gpu"`, the other seven warn and run on the CPU.
-* 3 environments (`envs/`), each with a version-locked file. Each environment works on both
-  CPU-only and GPU machines.
+* 2 version-locked conda environments for the Python methods (`envs/`), the same on CPU-only and
+  GPU machines; the R methods use your own R (packages: `Rscript envs/install_r_packages.R`).
 * Results: `kdb.load_results`, `kdb.evaluate`, `kdb.k_accuracy`; plots in `kdb.pl`.
 
 ## Layout

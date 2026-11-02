@@ -91,7 +91,7 @@ def evaluate(clusters, truth):
     Examples
     --------
     >>> kdb.evaluate(clusters, "D1_151507_4k.h5ad")
-    {'k_estimated': 4, 'k_true': 7, 'k_error': -3, 'ARI': 0.42, 'NMI': 0.51, 'n_spots': 4220}
+    {'k_estimated': 4, 'k_true': 7, 'k_error': -3, 'ARI': 0.4207, 'NMI': 0.5062, 'n_spots': 4220}
     """
     from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
     if not isinstance(truth, pd.Series):
@@ -101,7 +101,8 @@ def evaluate(clusters, truth):
     p, t = pred.loc[common].astype(str), truth.loc[common]
     k_est, k_true = p.nunique(), t.nunique()
     return dict(k_estimated=int(k_est), k_true=int(k_true), k_error=int(k_est - k_true),
-                ARI=float(adjusted_rand_score(t, p)), NMI=float(normalized_mutual_info_score(t, p)),
+                ARI=round(float(adjusted_rand_score(t, p)), 4),
+                NMI=round(float(normalized_mutual_info_score(t, p)), 4),
                 n_spots=int(len(common)))
 
 
@@ -155,7 +156,7 @@ def load_results(root="kdb_results", truth_key="clusters", score=True):
 
 
 def k_accuracy(summary):
-    """Summarise how well each method estimates k.
+    """Summarize how well each method estimates k.
 
     Failed runs and runs without a ground truth are left out.
 
@@ -167,8 +168,9 @@ def k_accuracy(summary):
     Returns
     -------
     pandas.DataFrame
-        One row per method, best first: ``runs``, ``mean_abs_k_error``, ``exact_rate``
-        (fraction of runs with exactly the true k) and ``mean_ARI``.
+        One row per method, best first (smallest mean absolute k error, then highest mean ARI):
+        ``runs``, ``mean_abs_k_error``, ``exact_rate`` (fraction of runs with exactly the true k)
+        and ``mean_ARI``.
 
     Examples
     --------
@@ -179,5 +181,6 @@ def k_accuracy(summary):
               .groupby("method")
               .agg(runs=("k_error", "size"), mean_abs_k_error=("abs_err", "mean"),
                    exact_rate=("exact", "mean"), mean_ARI=("ARI", "mean"))
-              .sort_values("mean_abs_k_error"))
+              .round({"mean_ARI": 4})
+              .sort_values(["mean_abs_k_error", "mean_ARI"], ascending=[True, False]))
 

@@ -1,7 +1,7 @@
 # API reference
 
-The package is imported as `import kdomainbench as kdb`. Its functions form four groups,
-methods, run, scores and figures, plus a setup group. Each name links to its reference entry,
+The package is imported as `import kdomainbench as kdb`. Its functions form four groups
+(methods, run, scores, figures) plus setup. Each name links to its reference entry,
 with the parameters and examples.
 
 ## 1. Methods

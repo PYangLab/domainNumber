@@ -38,7 +38,7 @@ def set_env(key, interpreter=None, r_lib=None):
     Examples
     --------
     >>> kdb.set_env("spatialde", "/opt/envs/kdb_spatialde/bin/python")
-    >>> kdb.set_env("r", "/usr/bin/Rscript", r_lib="/opt/kdb_r/library")
+    >>> kdb.set_env("r", "/usr/bin/Rscript", r_lib="/path/to/R/library")
     """
     if key not in _ENV_VARS:
         raise ValueError(f"env must be one of {list(_ENV_VARS)}")

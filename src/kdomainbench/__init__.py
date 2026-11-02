@@ -4,13 +4,13 @@
     clusters = kdb.run("CellCharter", "D1_151507_4k.h5ad", kmax=30, device="gpu")
 """
 from .config import set_env
-from .registry import METHODS, get_method, list_methods
+from .registry import METHODS, Method, get_method, list_methods
 from .results import evaluate, ground_truth, k_accuracy, load_results, read_clusters
 from .runner import MethodFailed, run
 from . import plotting as pl
 
 __version__ = "0.1.0"
-__all__ = ["run", "run_all", "list_methods", "get_method", "METHODS", "set_env", "MethodFailed",
+__all__ = ["run", "run_all", "list_methods", "get_method", "Method", "METHODS", "set_env", "MethodFailed",
            "read_clusters", "ground_truth", "evaluate", "load_results", "k_accuracy", "pl"]
 
 

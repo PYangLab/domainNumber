@@ -24,8 +24,8 @@ The conda envs are looked for under `$CONDA_EXE`, `$MAMBA_EXE`, `$CONDA_PREFIX` 
 | Command | Does |
 |---|---|
 | `kdomainbench methods` | Print the methods: language, environment, GPU, use of `kmax`. |
-| `kdomainbench check [--gpu] [--gpu-id N]` | Start each environment once and print its key packages; with `--gpu`, with GPU `N` visible. |
-| `kdomainbench run -m M [M …] -i FILE [-k KMAX] [-d cpu\|gpu] [--gpu-id N] [-o DIR]` | Run methods; `-m all` runs all ten. |
+| `kdomainbench check [--gpu] [--gpu-id N]` | Start each environment once and print its key packages; `--gpu` makes GPU `N` visible. |
+| `kdomainbench run -m M [M …] -i FILE [-k KMAX] [-d {cpu,gpu}] [--gpu-id N] [-o DIR]` | Run methods; `-m all` runs all ten. |
 | `kdomainbench summarize [ROOT] [--csv FILE] [--plot FILE]` | Print the summary table and `k_accuracy`; save the table and the k figure. |
 
 ```bash title="terminal"

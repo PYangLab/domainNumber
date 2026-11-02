@@ -94,7 +94,6 @@ nav:
       - Discover methods: tutorials/discover.md
       - Run a method: tutorials/run.md
       - Evaluate a run: tutorials/evaluate.md
-      - Load and plot results: tutorials/plot.md
       - Benchmark the ten methods: tutorials/benchmark.md
   - How kDomainBench works: methods.md
   - API reference:

@@ -8,10 +8,10 @@ the estimated k is from the true k, and how well the domains match the annotated
     import kdomainbench as kdb
     h5ad = "data/D1_151507_4k.h5ad"
 
-    clusters = kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")       # or the return value of kdb.run
-    kdb.evaluate(clusters, h5ad)                     # one run
-    summary = kdb.load_results("kdb_results")               # every run under kdb_results/, scored
-    kdb.k_accuracy(summary)                          # one row per method
+    clusters = kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")  # or what kdb.run returns
+    kdb.evaluate(clusters, h5ad)                  # one run
+    summary = kdb.load_results("kdb_results")     # every run under kdb_results/, scored
+    kdb.k_accuracy(summary)                       # one row per method
     ```
 
 ## Score one run
@@ -20,7 +20,7 @@ the estimated k is from the true k, and how well the domains match the annotated
 clusters = kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")
 kdb.evaluate(clusters, h5ad)
 # {'k_estimated': 4, 'k_true': 7, 'k_error': -3,
-#  'ARI': 0.42, 'NMI': 0.51, 'n_spots': 4220}
+#  'ARI': 0.4207, 'NMI': 0.5062, 'n_spots': 4220}
 ```
 
 The second argument is the `.h5ad` file, whose `obs["clusters"]` holds the ground truth, or the
@@ -60,22 +60,22 @@ against its own `.h5ad` file. The result has one row per run:
 summary = kdb.load_results("kdb_results")
 summary[["method", "device_used", "k_estimated", "k_true", "k_error",
          "ARI", "NMI", "wall_time_s", "peak_rss_mb"]]
-#         method device_used  k_estimated  k_true  k_error   ARI   NMI  wall_time_s  peak_rss_mb
-#       BNPSpace         cpu            1       7       -6  0.00  0.00      2508.43       5303.4
-#     BayesSpace         cpu            3       7       -4  0.35  0.56      3209.30      12029.7
-#    CellCharter         cpu            4       7       -3  0.49  0.65       978.14       2068.9
-#            ...
+#         method device_used  k_estimated  k_true  k_error     ARI     NMI  wall_time_s  peak_rss_mb
+# 0     BNPSpace         cpu            1       7       -6  0.0000  0.0000      2508.43       5303.4
+# 1   BayesSpace         cpu            3       7       -4  0.3533  0.5648      3209.30      12029.7
+# 2  CellCharter         cpu            4       7       -3  0.4901  0.6490       978.14       2068.9
+# ...
 ```
 
-`kdb.k_accuracy` sums it up per method, best first:
+`kdb.k_accuracy` sums it up per method, best first (smallest k error, then highest ARI):
 
 ```python
 kdb.k_accuracy(summary)
-#              runs  mean_abs_k_error  exact_rate  mean_ARI
+#         runs  mean_abs_k_error  exact_rate  mean_ARI
 # method
-# DR.SC           1               0.0         1.0      0.47
-# SC.MEB          1               2.0         0.0      0.41
-# DeepST          1               3.0         0.0      0.55
+# DR.SC      1               0.0         1.0    0.4691
+# SC.MEB     1               2.0         0.0    0.4077
+# DeepST     1               3.0         0.0    0.5516
 # ...
 ```
 
@@ -107,4 +107,4 @@ Both tables for all ten methods, with what they show, are in
 * **`kmax`** changes the answer of the eight methods that use it. Keep it the same across methods
   (the benchmark uses 30).
 
-Next: [load and plot results](plot.md).
+Next: [Benchmark the ten methods](benchmark.md) runs them all and compares their k.

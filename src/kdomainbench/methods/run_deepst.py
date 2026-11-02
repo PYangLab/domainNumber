@@ -1,6 +1,6 @@
 import os, sys
 # --device cpu|gpu (default cpu). Must be applied before torch/tensorflow are imported:
-# cpu hides all GPUs; gpu keeps the caller's CUDA_VISIBLE_DEVICES (kdomainbench sets it to GPU 0).
+# cpu hides all GPUs; gpu keeps the caller's CUDA_VISIBLE_DEVICES (kdomainbench sets it to gpu_id).
 DEVICE = sys.argv[sys.argv.index("--device") + 1] if "--device" in sys.argv else "cpu"
 if DEVICE == "cpu":
     os.environ["CUDA_VISIBLE_DEVICES"] = ""

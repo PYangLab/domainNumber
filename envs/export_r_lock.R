@@ -1,4 +1,4 @@
-# Write kdb_r.lock.csv: every non-base package in the kdb_r library, dependencies first.
+# Write kdb_r.lock.csv: every non-base package in an R library, dependencies first.
 # Usage: Rscript export_r_lock.R <library> <out.csv>
 args <- commandArgs(trailingOnly = TRUE)
 ip <- installed.packages(lib.loc = args[1], fields = c("Repository", "biocViews"))

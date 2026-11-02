@@ -13,7 +13,6 @@ One task per tutorial, with every option of the calls it uses.
 | [Discover methods](discover.md) | Lists the ten methods, filters them, and shows how each one picks k. |
 | [Run a method](run.md) | Runs one or several methods, from Python or the shell; your own data; CPU or GPU. |
 | [Evaluate a run](evaluate.md) | Scores the estimated k and the domains against the ground truth. |
-| [Load and plot results](plot.md) | Collects runs into one table and draws the figures. |
 
 ## Analyses
 

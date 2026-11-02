@@ -73,8 +73,8 @@ The script installs only what is missing, from CRAN and Bioconductor, in the usu
 
 | Source | Packages |
 |---|---|
-| CRAN | PRECAST, DR.SC, iSC.MEB, Seurat, Rcpp, RcppArmadillo, flexclust, philentropy, fastcluster, dynamicTreeCut, purrr, deldir, glue, ggplot2, cowplot |
-| Bioconductor | BayesSpace, zellkonverter, SingleCellExperiment, scran, scater, scuttle, BiocSingular |
+| CRAN | PRECAST, DR.SC, iSC.MEB, Seurat, Rcpp, RcppArmadillo, flexclust, philentropy, fastcluster, dynamicTreeCut, purrr, deldir, glue, ggplot2, cowplot, mclust (plus remotes and BiocManager to install the rest) |
+| Bioconductor | BayesSpace, zellkonverter, SingleCellExperiment, SummarizedExperiment, scran, scater, scuttle, BiocSingular |
 | CRAN archive | SC.MEB 1.1 (no longer on CRAN) |
 
 BNPSpace is not a package: its C++ code ships with kDomainBench and is compiled on its first run.

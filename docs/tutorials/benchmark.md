@@ -20,14 +20,19 @@ the true number of domains. Every number and figure on this page comes from that
 `D1_151507_4k.h5ad` is DLPFC Visium sample 151507 ([Get the data](../installation.md#get-the-data)).
 Its 4 220 spots carry the manual layer annotation, Layer1–Layer6 and white matter: **k = 7**.
 
+```python
+import kdomainbench as kdb
+
+h5ad = "data/D1_151507_4k.h5ad"
+truth = kdb.ground_truth(h5ad).rename("cluster").to_frame()
+kdb.pl.plot_spatial(truth, h5ad, title="ground truth")
+```
+
 ![Ground truth](../assets/ground_truth.png){ width="320" }
 
 ## 2. Run every method
 
 ```python
-import kdomainbench as kdb
-
-h5ad = "data/D1_151507_4k.h5ad"
 results = kdb.run_all(h5ad, kmax=30, device="cpu", out_root="bench/")
 ```
 
@@ -53,7 +58,8 @@ run, data loading included; *peak RAM* is host memory only. The raw numbers are 
 * **DR.SC** found exactly 7 domains, and **SC.MEB** 9.
 * **CellCharter, DeepST and SpaGCN** found 4, fewer than the 7 layers. DeepST still has the
   highest ARI (0.55): its 4 domains follow the layer boundaries well.
-* **SpatialDE2** split the tissue into 10 domains.
+* **SpatialDE2** split the tissue into 10 domains, but only 4 of them are large: the other 6 have
+  38 spots or fewer.
 * **PRECAST, iSC.MEB and BayesSpace** found 2–3 domains, and **BNPSpace** put every spot in one
   cluster (k = 1, ARI 0).
 
@@ -66,7 +72,8 @@ fig = kdb.pl.plot_spatial_grid(results, h5ad, ncols=5)
 ![Spatial domains of the ten methods](../assets/spatial_domains.png)
 
 Compare each map with the ground truth above: a method with too few domains merges layers into
-broad bands, one with too many splits layers into patches.
+broad bands, one with too many splits layers into patches. Colors follow the sorted label
+names, so the same color in two maps does not mean the same domain.
 
 ## 5. Cost
 
@@ -77,8 +84,8 @@ kdb.pl.plot_runtime(summary)
 ![Run time per method](../assets/runtime.png)
 
 iSC.MEB, SpaGCN and DR.SC finished in under 10 minutes, and CellCharter and SC.MEB in 15–18.
-PRECAST, SpatialDE2, DeepST and BayesSpace took about an hour each. BayesSpace needed the most
-memory (11.7 GB).
+BNPSpace, BayesSpace, DeepST, SpatialDE2 and PRECAST took 40–75 minutes each. BayesSpace needed
+the most memory (12.0 GB).
 
 !!! note "One dataset, one run"
     These numbers come from **one** dataset with one seed per method, on a shared 32-core

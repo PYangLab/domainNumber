@@ -125,7 +125,7 @@ method's log and `run_info.json` with the run time and peak memory.
 ```python
 kdb.evaluate(clusters, h5ad)
 # {'k_estimated': 4, 'k_true': 7, 'k_error': -3,
-#  'ARI': 0.42, 'NMI': 0.51, 'n_spots': 4220}
+#  'ARI': 0.4207, 'NMI': 0.5062, 'n_spots': 4220}
 ```
 
 SpaGCN found 4 domains where the annotation has 7 (`k_error = -3`). ARI and NMI measure how well
@@ -146,7 +146,7 @@ summary = kdb.load_results("kdb_results")
 kdb.pl.plot_k_estimates(summary)       # one dot per run, the true k dashed
 ```
 
-[Load and plot results](tutorials/plot.md) shows every figure.
+[Benchmark the ten methods](tutorials/benchmark.md) draws every figure for all ten methods.
 
 ## Command line
 

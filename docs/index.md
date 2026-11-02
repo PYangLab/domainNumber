@@ -15,15 +15,16 @@ hide:
 <p class="lp-sub">
   kDomainBench is a benchmark of methods that estimate the number of spatial
   domains (<em>k</em>) in spatial transcriptomics data. The <code>kdomainbench</code>
-  package runs 10 of them from Python and scores the estimated <em>k</em>
+  package runs ten of them from Python and scores the estimated <em>k</em>
   against the ground truth.
 </p>
 
 ```bash
-pip install -e kdomainbench
+git clone --single-branch https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
+bash envs/install_envs.sh
 ```
 
-[Get started](quickstart.md){ .md-button .md-button--primary .lp-cta }
+[Get started](installation.md){ .md-button .md-button--primary .lp-cta }
 [How it works](methods.md){ .md-button .lp-cta }
 
 </div>
