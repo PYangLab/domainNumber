@@ -20,7 +20,7 @@ clusters = kdb.run("CellCharter", "D1_151507_4k.h5ad", kmax=30, device="gpu")   
 ```
 src/kdomainbench/          package (run, results, plotting, CLI)
 src/kdomainbench/methods/  one script per method (device is a flag, no CPU/GPU copies)
-envs/                      kdb_py.yml, kdb_spatialde.yml, kdb_r.yml + kdb_r.lock.csv, install_envs.sh
+envs/                      kdb_py.yml, kdb_spatialde.yml, install_envs.sh; install_r_packages.R, kdb_r.lock.csv
 docs/, mkdocs.yml          documentation site (mkdocs-material)
 scripts/                   make_results_page.py, make_logo.py, check_docs.py
 ```

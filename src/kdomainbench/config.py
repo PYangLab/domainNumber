@@ -24,7 +24,7 @@ def set_env(key, interpreter=None, r_lib=None):
     Parameters
     ----------
     key : str
-        ``"py"`` (kdb_py), ``"spatialde"`` (kdb_spatialde) or ``"r"`` (kdb_r).
+        ``"py"`` (kdb_py), ``"spatialde"`` (kdb_spatialde) or ``"r"`` (your R).
     interpreter : str or path, optional
         The environment's ``python``, or ``Rscript`` for ``"r"``.
     r_lib : str or path, optional

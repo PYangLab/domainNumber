@@ -1,34 +1,31 @@
-# Install the exact R package versions listed in kdb_r.lock.csv (Package, Version, Source).
-# Usage: Rscript install_r_packages.R kdb_r.lock.csv [library]
+# Install the R packages of the kdomainbench R methods into your own R (>= 4.4).
+# Only missing packages are installed, from CRAN and Bioconductor as usual.
+# Usage: Rscript envs/install_r_packages.R [library]
+#   library: optional separate library; then set KDB_R_LIB to it.
+# The versions of the benchmark are listed in kdb_r.lock.csv (for reference).
 args <- commandArgs(trailingOnly = TRUE)
-lock <- read.csv(args[1], stringsAsFactors = FALSE)
-lib <- if (length(args) > 1) args[2] else .libPaths()[1]
+lib <- if (length(args) > 0) args[1] else .libPaths()[1]
 dir.create(lib, recursive = TRUE, showWarnings = FALSE)
 .libPaths(c(lib, .libPaths()))
-options(repos = c(CRAN = "https://packagemanager.posit.co/cran/2024-10-01"), Ncpus = 8)
-for (p in c("remotes", "BiocManager"))
-  if (!requireNamespace(p, quietly = TRUE)) install.packages(p, lib = lib)
-options(repos = BiocManager::repositories(version = "3.19"))
+if (is.null(getOption("repos")) || getOption("repos")["CRAN"] %in% c("@CRAN@", NA))
+  options(repos = c(CRAN = "https://cloud.r-project.org"))
 
-have <- function(p, v) {
-  ok <- suppressWarnings(tryCatch(as.character(packageVersion(p, lib.loc = lib)) == v, error = function(e) FALSE))
-  isTRUE(ok)
-}
-# Install in lock order (dependencies first); `dependencies = FALSE` keeps every version as locked.
-for (i in seq_len(nrow(lock))) {
-  p <- lock$Package[i]; v <- lock$Version[i]
-  if (have(p, v)) next
-  message("installing ", p, " ", v)
-  if (lock$Source[i] == "bioc") {        # Bioconductor 3.19 serves exactly one version per package
-    BiocManager::install(p, version = "3.19", lib = lib, dependencies = FALSE, update = FALSE, ask = FALSE)
-  } else if (lock$Source[i] == "archive") {
-    remotes::install_url(sprintf("https://cran.r-project.org/src/contrib/Archive/%s/%s_%s.tar.gz", p, p, v),
-                         lib = lib, dependencies = FALSE, upgrade = "never")
-  } else {
-    remotes::install_version(p, version = v, lib = lib, dependencies = FALSE, upgrade = "never",
-                             repos = getOption("repos"))
-  }
-}
-missing <- lock$Package[!mapply(have, lock$Package, lock$Version)]
-if (length(missing)) stop("not installed at the locked version: ", paste(missing, collapse = ", "))
-cat("all", nrow(lock), "R packages installed at the locked versions\n")
+cran <- c("PRECAST", "DR.SC", "iSC.MEB", "Seurat", "Rcpp", "RcppArmadillo", "flexclust",
+          "philentropy", "fastcluster", "dynamicTreeCut", "purrr", "deldir", "glue", "ggplot2",
+          "cowplot", "mclust", "remotes", "BiocManager")
+bioc <- c("BayesSpace", "zellkonverter", "SingleCellExperiment", "SummarizedExperiment", "scran",
+          "scater", "scuttle", "BiocSingular")
+missing <- function(p) p[!vapply(p, requireNamespace, logical(1), quietly = TRUE)]
+
+todo <- missing(cran)
+if (length(todo)) install.packages(todo, lib = lib)
+todo <- missing(bioc)
+if (length(todo)) BiocManager::install(todo, lib = lib, update = FALSE, ask = FALSE)
+# SC.MEB was archived on CRAN; 1.1 is its last release.
+if (length(missing("SC.MEB")))
+  remotes::install_url("https://cran.r-project.org/src/contrib/Archive/SC.MEB/SC.MEB_1.1.tar.gz",
+                       lib = lib, upgrade = "never")
+
+left <- missing(c(cran, bioc, "SC.MEB"))
+if (length(left)) stop("not installed: ", paste(left, collapse = ", "))
+cat("all R packages of kdomainbench are installed\n")

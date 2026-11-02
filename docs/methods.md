@@ -10,7 +10,7 @@ The methods need incompatible software: R 4.4 with Bioconductor, PyTorch with Py
 TensorFlow 2.15. So each runs in its own environment, and `kdb.run` bridges them:
 
 1. It looks up the method: its script in `src/kdomainbench/methods/`, its environment
-   (`kdb_r`, `kdb_py` or `kdb_spatialde`) and its arguments.
+   (your R, `kdb_py` or `kdb_spatialde`) and its arguments.
 2. It starts the script with that environment's `Rscript` or `python`, as a separate process
    whose working directory is the run folder.
 3. It saves everything the script prints to `run.log`, and measures the wall time and the peak
@@ -41,12 +41,12 @@ back to the CPU when no GPU is visible.
 
 | Method | Env | GPU | Model | How k is selected | Key settings |
 |---|---|:---:|---|---|---|
-| [PRECAST](https://feiyoung.github.io/PRECAST/) | `kdb_r` | – | Spatial factor model + hidden Markov random field (HMRF) | Fits K = 2 … kmax, picks one with a modified BIC (`SelectModel`) | 2000 HVGs, Visium neighbours, `maxIter=30` |
-| [SC.MEB](https://shufeyangyi2015310117.github.io/SC.MEB/) | `kdb_r` | – | HMRF on 15 principal components | Fits K = 2 … kmax, picks one by BIC (`selectK`) | β grid 0–4 (step 0.2), serial |
-| [BayesSpace](https://www.ezstatconsulting.com/BayesSpace/) | `kdb_r` | – | Bayesian spatial clustering with a Potts prior | `qTune` log-likelihood for q = 2 … kmax; the elbow (minimum second difference) is q | 15 PCs, 2000 HVGs, γ = 3, 50 000 MCMC iterations |
-| [BNPSpace](https://github.com/new-zbc/BNPSpace) | `kdb_r` | – | Bayesian nonparametric count model with feature selection | Clusters left non-empty after MCMC, starting from K = kmax | 300 MCMC iterations, lattice neighbours |
-| [DR.SC](https://feiyoung.github.io/DR.SC/) | `kdb_r` | – | Joint dimension reduction + spatial clustering | Fits K = 2 … kmax, picks one with a modified BIC | 500 HVGs |
-| [iSC.MEB](https://xiaozhangryy.github.io/iSC.MEB/) | `kdb_r` | – | Integrated HMRF on APCA embeddings | Fits K = 2 … kmax, picks one with a modified BIC | 15 PCs (APCA), `coreNum=10` |
+| [PRECAST](https://feiyoung.github.io/PRECAST/) | R | – | Spatial factor model + hidden Markov random field (HMRF) | Fits K = 2 … kmax, picks one with a modified BIC (`SelectModel`) | 2000 HVGs, Visium neighbours, `maxIter=30` |
+| [SC.MEB](https://shufeyangyi2015310117.github.io/SC.MEB/) | R | – | HMRF on 15 principal components | Fits K = 2 … kmax, picks one by BIC (`selectK`) | β grid 0–4 (step 0.2), serial |
+| [BayesSpace](https://www.ezstatconsulting.com/BayesSpace/) | R | – | Bayesian spatial clustering with a Potts prior | `qTune` log-likelihood for q = 2 … kmax; the elbow (minimum second difference) is q | 15 PCs, 2000 HVGs, γ = 3, 50 000 MCMC iterations |
+| [BNPSpace](https://github.com/new-zbc/BNPSpace) | R | – | Bayesian nonparametric count model with feature selection | Clusters left non-empty after MCMC, starting from K = kmax | 300 MCMC iterations, lattice neighbours |
+| [DR.SC](https://feiyoung.github.io/DR.SC/) | R | – | Joint dimension reduction + spatial clustering | Fits K = 2 … kmax, picks one with a modified BIC | 500 HVGs |
+| [iSC.MEB](https://xiaozhangryy.github.io/iSC.MEB/) | R | – | Integrated HMRF on APCA embeddings | Fits K = 2 … kmax, picks one with a modified BIC | 15 PCs (APCA), `coreNum=10` |
 | [CellCharter](https://cellcharter.readthedocs.io/) | `kdb_py` | ✓ | scVI latent space, neighbourhood aggregation, GMM | `ClusterAutoK`: clustering stability over K = 2 … kmax (10 runs) | 5000 HVGs, 6 grid neighbours, 4 layers |
 | [DeepST](https://github.com/JiangBioLab/DeepST) | `kdb_py` | ✓ | Graph autoencoder on augmented expression | Leiden resolution 0.1–2.5 chosen by the Calinski–Harabasz score (`n_domains=0`); ignores kmax | 500 + 500 epochs, PCA ≤ 200 |
 | [SpaGCN](https://github.com/jianhuupenn/SpaGCN) | `kdb_py` | – | Graph convolutional network + iterative clustering | Louvain resolution 0.2–1.0 with the highest silhouette score; ignores kmax | p = 0.5, 200 epochs |
@@ -65,7 +65,7 @@ only these changes:
 * `bnpspace.R`: finds its helper `R/` sources through `KDB_METHODS_DIR`, set by kDomainBench, so
   it runs from any working directory.
 * `bayesspace.R`: copies `array_row` / `array_col` into `row` / `col`. BayesSpace 1.14
-  (Bioconductor 3.19, the version in `kdb_r`) reads `row` / `col`; ≥ 1.16 reads
+  (Bioconductor 3.19, the version of the benchmark) reads `row` / `col`; ≥ 1.16 reads
   `array_row` / `array_col`. Both end up with the same coordinates.
 * `scmeb.R`: runs SC.MEB serially (`parallel = FALSE`). The original runs each K in a parallel
   worker, and the workers do not inherit `set.seed(114)`, so two runs on the same data gave

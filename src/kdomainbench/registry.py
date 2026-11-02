@@ -16,7 +16,7 @@ class Method:
     language : str
         ``"R"`` or ``"Python"``.
     env : str
-        Environment key: ``"r"`` (kdb_r), ``"py"`` (kdb_py) or ``"spatialde"`` (kdb_spatialde).
+        Environment key: ``"r"`` (your R), ``"py"`` (kdb_py) or ``"spatialde"`` (kdb_spatialde).
     script : str
         The method's script in ``kdomainbench/methods/``.
     argv : callable

@@ -1,13 +1,14 @@
 # Installation
 
 `kdomainbench` is a Python package. It runs on Linux, on CPU-only and GPU machines alike.
-The package itself lives in the `kdb_py` environment. The ten methods run in three
-environments, which kDomainBench calls for you.
+The package itself lives in the `kdb_py` environment. The Python methods run in two conda
+environments, and the R methods in your own R. kDomainBench calls each for you.
 
 !!! tip "Summary"
     ```bash
     git clone --single-branch https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
-    bash envs/install_envs.sh                 # the three environments
+    bash envs/install_envs.sh                 # the two Python environments
+    Rscript envs/install_r_packages.R         # the R packages, into your R
     conda activate kdb_py
     kdomainbench check                        # every environment answers
     ```
@@ -20,7 +21,7 @@ cd kDomainBench
 ```
 
 The repository holds the package (`src/kdomainbench/`), one script per method
-(`src/kdomainbench/methods/`), the environment lock files (`envs/`) and the 4k test file
+(`src/kdomainbench/methods/`), the environment files (`envs/`) and the 4k test file
 (`data/`). `--single-branch` skips the `data` branch, which holds 700 MB of larger test files
 ([Get the data](#get-the-data)).
 
@@ -32,52 +33,70 @@ Each method runs in one of three environments, so their dependencies never confl
 |---|---|---|
 | `kdb_py` | CellCharter, DeepST, SpaGCN (and `kdomainbench` itself) | Python 3.12.8, torch 2.5.1 + CUDA 12.4, torch_geometric 2.8.1, scanpy 1.10.3, scvi-tools 1.4.1, cellcharter 0.3.7, deepstkit 2.0.3, SpaGCN 1.2.7, squidpy 1.8.3 |
 | `kdb_spatialde` | SpatialDE2 | Python 3.10, tensorflow[and-cuda] 2.15.1, tensorflow-probability 0.23.0, gpflow 2.9.2, numpy 1.26.4, SpatialDE 2.0.0 |
-| `kdb_r` | PRECAST, SC.MEB, BayesSpace, BNPSpace, DR.SC, iSC.MEB | R 4.4.1, Bioconductor 3.19, PRECAST 1.7, DR.SC 3.6, iSC.MEB 1.0, SC.MEB 1.1, BayesSpace 1.14.0, Seurat 5.3.0, zellkonverter 1.14.1 |
+| your R | PRECAST, SC.MEB, BayesSpace, BNPSpace, DR.SC, iSC.MEB | R ≥ 4.4 with the packages below |
 
-=== "All three"
+### The Python environments
 
-    ```bash title="terminal"
-    bash envs/install_envs.sh
-    ```
+```bash title="terminal"
+bash envs/install_envs.sh
+```
 
-=== "One at a time"
+It creates both environments from the lock files and installs `kdomainbench` into `kdb_py`.
+To create them one at a time:
 
-    ```bash title="terminal"
-    mamba env create -n kdb_py        -f envs/kdb_py.yml
-    mamba env create -n kdb_spatialde -f envs/kdb_spatialde.yml
-    mamba env create -n kdb_r         -f envs/kdb_r.yml
-    conda run -n kdb_r Rscript envs/install_r_packages.R envs/kdb_r.lock.csv
-    conda run -n kdb_py pip install --no-deps -e .
-    ```
+```bash title="terminal"
+conda env create -n kdb_py        -f envs/kdb_py.yml
+conda env create -n kdb_spatialde -f envs/kdb_spatialde.yml
+conda run -n kdb_py pip install --no-deps -e .
+```
 
 !!! success "The same environments work on CPU and GPU machines"
     There are no separate CPU and GPU environments. `kdb_py` has the CUDA 12.4 build of torch
     and `kdb_spatialde` has `tensorflow[and-cuda]`. Both bring their CUDA runtime as pip wheels,
     so a GPU machine needs only an NVIDIA driver (≥ 525), not a CUDA toolkit. Without a visible
-    GPU, torch and TensorFlow fall back to the CPU. The R environment is CPU-only.
+    GPU, torch and TensorFlow fall back to the CPU. Together they take about 12 GB of disk.
+
+### R
+
+The R methods use the R you already have (R ≥ 4.4, Bioconductor 3.19 or later). Install the
+packages they need into it:
+
+```bash title="terminal"
+Rscript envs/install_r_packages.R
+```
+
+The script installs only what is missing, from CRAN and Bioconductor, in the usual way:
+
+| Source | Packages |
+|---|---|
+| CRAN | PRECAST, DR.SC, iSC.MEB, Seurat, Rcpp, RcppArmadillo, flexclust, philentropy, fastcluster, dynamicTreeCut, purrr, deldir, glue, ggplot2, cowplot |
+| Bioconductor | BayesSpace, zellkonverter, SingleCellExperiment, scran, scater, scuttle, BiocSingular |
+| CRAN archive | SC.MEB 1.1 (no longer on CRAN) |
+
+BNPSpace is not a package: its C++ code ships with kDomainBench and is compiled on its first run.
+
+??? note "The versions we used"
+    The benchmark ran with R 4.4.1, Bioconductor 3.19, PRECAST 1.7, DR.SC 3.6, iSC.MEB 1.0,
+    SC.MEB 1.1, BayesSpace 1.14.0, Seurat 5.3.0 and zellkonverter 1.14.1. `envs/kdb_r.lock.csv`
+    lists every R package with its version.
+
+??? note "Keep the R packages apart from your own"
+    Install them into a separate library, and point kDomainBench at it:
+
+    ```bash title="terminal"
+    Rscript envs/install_r_packages.R ~/kdb_r/library
+    export KDB_R_LIB=~/kdb_r/library
+    ```
+
+    With `KDB_R_LIB` set, the R methods see only this library and base R, not your user and
+    site libraries.
 
 ??? note "Lock files"
-    Every package version is pinned:
-
     | File | What it locks |
     |---|---|
     | `envs/kdb_py.yml` | conda + pip packages of `kdb_py`, with the PyTorch cu124 and PyG wheel indexes |
     | `envs/kdb_spatialde.yml` | conda + pip packages of `kdb_spatialde`, with SpatialDE pinned to commit `6dbdb55` |
-    | `envs/kdb_r.yml` | R 4.4.1, compilers and the system libraries the R packages need |
-    | `envs/kdb_r.lock.csv` | every R package (CRAN / Bioconductor 3.19) with its version, in install order |
-
-    The GPU builds of torch and TensorFlow take about 6–8 GB more disk than CPU-only builds.
-
-??? note "Already have R 4.4.1?"
-    Skip `kdb_r.yml` and install the locked packages into a separate library for your R:
-
-    ```bash title="terminal"
-    Rscript envs/install_r_packages.R envs/kdb_r.lock.csv ~/kdb_r/library
-    export KDB_RSCRIPT=$(which Rscript)  KDB_R_LIB=~/kdb_r/library
-    ```
-
-    With `KDB_R_LIB` set, kDomainBench hides your user and site R libraries from the methods:
-    they see only this library and base R.
+    | `envs/kdb_r.lock.csv` | the R packages and versions of the benchmark (reference) |
 
 ## Step 3: Verify the install
 
@@ -113,7 +132,7 @@ On a GPU machine, `kdomainbench check --gpu` should report `CUDA available: True
     ```bash title="terminal"
     export KDB_PY_PYTHON=/path/to/envs/kdb_py/bin/python
     export KDB_SPATIALDE_PYTHON=/path/to/envs/kdb_spatialde/bin/python
-    export KDB_RSCRIPT=/path/to/envs/kdb_r/bin/Rscript
+    export KDB_RSCRIPT=/path/to/bin/Rscript
     export KDB_R_LIB=/path/to/isolated/R/library      # optional
     ```
 

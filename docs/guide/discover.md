@@ -36,7 +36,7 @@ SpaGCN      Python   py         -    no (auto)
 SpatialDE2  Python   spatialde  yes  yes
 ```
 
-`env` is the environment the method runs in: `r` is `kdb_r`, `py` is `kdb_py` and `spatialde`
+`env` is the environment the method runs in: `r` is your R, `py` is `kdb_py` and `spatialde`
 is `kdb_spatialde` ([Installation](../installation.md#step-2-create-the-environments)).
 
 ## Filter by what you need

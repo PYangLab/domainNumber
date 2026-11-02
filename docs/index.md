@@ -102,7 +102,7 @@ pip install -e kdomainbench
 <div class="lp-feat">
 <span class="lp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
 <span class="lp-feat-title">Reproducible environments</span>
-<span class="lp-feat-desc">The methods run in three environments, R, PyTorch and TensorFlow, with every package version locked. Every run uses the same software, and the method scripts are the benchmark's own.</span>
+<span class="lp-feat-desc">The Python methods run in two locked conda environments (PyTorch, TensorFlow), the R methods in your own R. The method scripts are the benchmark's own.</span>
 </div>
 <div class="lp-feat">
 <span class="lp-feat-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></span>
