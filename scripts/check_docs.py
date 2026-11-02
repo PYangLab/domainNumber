@@ -26,8 +26,8 @@ import warnings
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PAGES = ["installation.md", "quickstart.md", "guide/discover.md", "guide/run.md", "guide/evaluate.md", "guide/plot.md",
-         "tutorials/benchmark.md", "tutorials/cpu_vs_gpu.md", "api.md", "reference/setup.md"]
+BASICS = ["tutorials/discover.md", "tutorials/run.md", "tutorials/evaluate.md", "tutorials/plot.md"]
+PAGES = ["installation.md", "quickstart.md", *BASICS, "tutorials/benchmark.md", "tutorials/cpu_vs_gpu.md", "api.md", "reference/setup.md"]
 FAST = {"SpaGCN", "DR.SC", "SC.MEB", "iSC.MEB"}
 SKIP_SHELL = re.compile(r"--gpu|-d gpu|-m all|^(git|mamba|conda|bash|Rscript|export|nvidia-smi|wget|"
                         r"python scripts/)")
@@ -169,7 +169,7 @@ def main():
     for page, bl in targets:
         # Get started pages build on each other (out/ from "Run a method" feeds the next pages),
         # as for a reader who follows them in order; tutorials and docstrings start fresh.
-        shared = page in ("installation.md", "quickstart.md", "reference/setup.md") or page.startswith("guide/")
+        shared = page in ("installation.md", "quickstart.md", "reference/setup.md", *BASICS)
         d = work / ("getstarted" if shared else page.replace("/", "_").replace(".md", ""))
         (d / "data").mkdir(parents=True, exist_ok=True)
         for link in (d / "data" / ARGS.h5ad.name, d / ARGS.h5ad.name):

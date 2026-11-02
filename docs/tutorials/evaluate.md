@@ -87,7 +87,7 @@ kdb.k_accuracy(summary)
 | `mean_ARI` | mean ARI over the runs |
 
 Both tables for all ten methods, with what they show, are in
-[Benchmark the ten methods](../tutorials/benchmark.md#3-estimated-k-and-accuracy).
+[Benchmark the ten methods](benchmark.md#3-estimated-k-and-accuracy).
 
 ??? note "Details"
     * Failed runs stay in `summary` with `success = False`; `k_accuracy` leaves them out.

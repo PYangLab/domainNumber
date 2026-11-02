@@ -159,7 +159,7 @@ kdb.run("PRECAST", h5ad, kmax=30, device="gpu")
 ```
 
 How much faster the GPU is, and whether the result changes:
-[CPU versus GPU](../tutorials/cpu_vs_gpu.md).
+[CPU versus GPU](cpu_vs_gpu.md).
 
 ## Command line
 

@@ -71,7 +71,7 @@ m.language, m.env, m.gpu, m.uses_kmax
 # ('Python', 'py', True, True)
 ```
 
-[Discover methods](guide/discover.md) has the full table and how each method picks k.
+[Discover methods](tutorials/discover.md) has the full table and how each method picks k.
 
 ## Step 2: Get the data
 
@@ -91,7 +91,7 @@ kdb.ground_truth(h5ad).value_counts()
 # Layer2     305
 ```
 
-For your own data, see [Inputs](guide/run.md#inputs).
+For your own data, see [Inputs](tutorials/run.md#inputs).
 
 ## Step 3: Run a method
 
@@ -118,7 +118,7 @@ method's log and `run_info.json` with the run time and peak memory.
     * DeepST and SpaGCN choose k by themselves and ignore `kmax`.
     * A failed method raises `kdb.MethodFailed` with the end of its log.
 
-[Run a method](guide/run.md) covers the arguments, the run folder and your own data.
+[Run a method](tutorials/run.md) covers the arguments, the run folder and your own data.
 
 ## Step 4: Evaluate the run
 
@@ -131,7 +131,7 @@ kdb.evaluate(clusters, h5ad)
 SpaGCN found 4 domains where the annotation has 7 (`k_error = -3`). ARI and NMI measure how well
 its domains match the layers, whatever their number.
 
-[Evaluate a run](guide/evaluate.md) explains the scores and how to compare many runs.
+[Evaluate a run](tutorials/evaluate.md) explains the scores and how to compare many runs.
 
 ## Step 5: Plot
 
@@ -146,7 +146,7 @@ summary = kdb.load_results("kdb_results")
 kdb.pl.plot_k_estimates(summary)       # one dot per run, the true k dashed
 ```
 
-[Load and plot results](guide/plot.md) shows every figure.
+[Load and plot results](tutorials/plot.md) shows every figure.
 
 ## Command line
 
@@ -162,5 +162,5 @@ kdomainbench summarize --csv summary.csv --plot k.png
 
 * Run every method and compare their k: [Benchmark the ten methods](tutorials/benchmark.md).
 * Run the GPU methods on both devices: [CPU versus GPU](tutorials/cpu_vs_gpu.md).
-* Bring your own Visium sample: [Your own data](guide/run.md#your-own-data).
+* Bring your own Visium sample: [Your own data](tutorials/run.md#your-own-data).
 * Every function and its parameters: [API reference](api.md).

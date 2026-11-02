@@ -33,7 +33,7 @@ results = kdb.run_all(h5ad, kmax=30, device="cpu", out_root="bench/")
 
 All ten ran with `kmax = 30` and the benchmark's settings
 ([How kDomainBench works](../methods.md#the-ten-methods)). Together they took about 6 hours on
-a CPU; [Run a method](../guide/run.md) shows how to run them one at a time or on a GPU.
+a CPU; [Run a method](run.md) shows how to run them one at a time or on a GPU.
 
 ## 3. Estimated k and accuracy
 
@@ -44,7 +44,7 @@ summary = kdb.load_results("bench/")
 --8<-- "results_table.md"
 
 *k error* = estimated k − true k. ARI and NMI compare the domains with the annotated layers
-([Evaluate a run](../guide/evaluate.md#what-each-score-measures)). *Wall time* covers the whole
+([Evaluate a run](evaluate.md#what-each-score-measures)). *Wall time* covers the whole
 run, data loading included; *peak RAM* is host memory only. The raw numbers are in
 [`summary_4k.csv`](../assets/summary_4k.csv).
 

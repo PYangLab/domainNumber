@@ -129,7 +129,7 @@ The file comes with the code: after Step 1 it is `data/D1_151507_4k.h5ad` (13 MB
     * `obs["clusters"]`: the ground-truth layer of each spot (`Layer1` … `Layer6`, `WM`)
     * `obs["pixel_row"]`, `obs["pixel_col"]`: pixel coordinates (read by SpaGCN)
 
-    [Run a method](guide/run.md#inputs) lists which field each method reads.
+    [Run a method](tutorials/run.md#inputs) lists which field each method reads.
 
 ## Troubleshooting
 

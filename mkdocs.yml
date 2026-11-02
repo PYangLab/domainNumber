@@ -89,12 +89,12 @@ nav:
   - Get started:
       - Installation: installation.md
       - Quickstart: quickstart.md
-      - Discover methods: guide/discover.md
-      - Run a method: guide/run.md
-      - Evaluate a run: guide/evaluate.md
-      - Load and plot results: guide/plot.md
   - Tutorials:
       - tutorials/index.md
+      - Discover methods: tutorials/discover.md
+      - Run a method: tutorials/run.md
+      - Evaluate a run: tutorials/evaluate.md
+      - Load and plot results: tutorials/plot.md
       - Benchmark the ten methods: tutorials/benchmark.md
       - CPU versus GPU: tutorials/cpu_vs_gpu.md
   - How kDomainBench works: methods.md
