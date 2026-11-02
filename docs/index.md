@@ -61,17 +61,17 @@ pip install -e kdomainbench
 <section class="lp-section">
 <div class="lp-grid-4">
 <div class="lp-card lp-card-link">
-<a class="lp-card-cover" href="guide/run.html">
-<span class="lp-card-kicker">Run</span>
-<span class="lp-card-title">Run a method</span>
-<span class="lp-card-desc">Run any of the 10 methods on an <code>.h5ad</code> file, each in its own environment.</span>
-</a>
-</div>
-<div class="lp-card lp-card-link">
 <a class="lp-card-cover" href="guide/discover.html">
 <span class="lp-card-kicker">Discover</span>
 <span class="lp-card-title">Find a method</span>
 <span class="lp-card-desc">See what each method needs and how it picks the number of domains.</span>
+</a>
+</div>
+<div class="lp-card lp-card-link">
+<a class="lp-card-cover" href="guide/run.html">
+<span class="lp-card-kicker">Run</span>
+<span class="lp-card-title">Run a method</span>
+<span class="lp-card-desc">Run any of the 10 methods on an <code>.h5ad</code> file, each in its own environment.</span>
 </a>
 </div>
 <div class="lp-card lp-card-link">
