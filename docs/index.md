@@ -20,7 +20,7 @@ hide:
 </p>
 
 ```bash
-git clone --single-branch https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
+git clone https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
 bash envs/install_envs.sh
 ```
 

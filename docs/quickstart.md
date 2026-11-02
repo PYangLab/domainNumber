@@ -4,7 +4,7 @@ Five steps take you from finding a method to a figure of its domains. Step 3 run
 it needs the environments from [Installation](installation.md). All outputs below are from real
 runs on `D1_151507_4k.h5ad` ([Get the data](installation.md#get-the-data)).
 
-??? tip "Words used on this site"
+??? tip "Key terms"
     spot
     :   One Visium capture spot: a row of the `.h5ad` file.
 

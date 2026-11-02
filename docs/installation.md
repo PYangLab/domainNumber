@@ -6,7 +6,7 @@ environments, and the R methods in your own R. kDomainBench calls each for you.
 
 !!! tip "Summary"
     ```bash
-    git clone --single-branch https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
+    git clone https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
     bash envs/install_envs.sh                 # the two Python environments
     Rscript envs/install_r_packages.R         # the R packages, into your R
     conda activate kdb_py
@@ -16,7 +16,7 @@ environments, and the R methods in your own R. kDomainBench calls each for you.
 ## Step 1: Get the code
 
 ```bash title="terminal"
-git clone --single-branch https://github.com/liuchunlei0430/kDomainBench.git
+git clone https://github.com/liuchunlei0430/kDomainBench.git
 cd kDomainBench
 ```
 
