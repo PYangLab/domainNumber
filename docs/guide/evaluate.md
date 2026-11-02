@@ -64,13 +64,7 @@ summary[["method", "device_used", "k_estimated", "k_true", "k_error",
 #       BNPSpace         cpu            1       7       -6  0.00  0.00      2508.43       5303.4
 #     BayesSpace         cpu            3       7       -4  0.35  0.56      3209.30      12029.7
 #    CellCharter         cpu            4       7       -3  0.49  0.65       978.14       2068.9
-#          DR.SC         cpu            7       7        0  0.47  0.58       460.59       2378.4
-#         DeepST         cpu            4       7       -3  0.55  0.68      3233.28       2932.7
-#        PRECAST         cpu            2       7       -5  0.17  0.31      4362.37       3529.8
-#         SC.MEB         cpu            9       7        2  0.41  0.53      1069.73       2711.6
-#         SpaGCN         cpu            4       7       -3  0.42  0.51       451.18       1413.9
-#     SpatialDE2         cpu           10       7        3  0.41  0.57      4156.90       2900.3
-#        iSC.MEB         cpu            2       7       -5  0.18  0.33       203.39       2939.3
+#            ...
 ```
 
 `kdb.k_accuracy` sums it up per method, best first:
@@ -82,13 +76,7 @@ kdb.k_accuracy(summary)
 # DR.SC           1               0.0         1.0      0.47
 # SC.MEB          1               2.0         0.0      0.41
 # DeepST          1               3.0         0.0      0.55
-# CellCharter     1               3.0         0.0      0.49
-# SpaGCN          1               3.0         0.0      0.42
-# SpatialDE2      1               3.0         0.0      0.41
-# BayesSpace      1               4.0         0.0      0.35
-# PRECAST         1               5.0         0.0      0.17
-# iSC.MEB         1               5.0         0.0      0.18
-# BNPSpace        1               6.0         0.0      0.00
+# ...
 ```
 
 | Column | Meaning |
@@ -97,6 +85,9 @@ kdb.k_accuracy(summary)
 | `mean_abs_k_error` | mean of \|k_error\| over the runs |
 | `exact_rate` | fraction of runs with exactly the true k |
 | `mean_ARI` | mean ARI over the runs |
+
+Both tables for all ten methods, with what they show, are in
+[Benchmark the ten methods](../tutorials/benchmark.md#3-estimated-k-and-accuracy).
 
 ??? note "Details"
     * Failed runs stay in `summary` with `success = False`; `k_accuracy` leaves them out.

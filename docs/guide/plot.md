@@ -14,7 +14,7 @@ estimated k of each method, run time and memory, and maps of the spatial domains
     kdb.pl.plot_spatial(kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu"), h5ad)
     ```
 
-All figures on this page come from the ten CPU runs on the 4k sample. Each function returns a
+The figures on this page come from the runs of the [benchmark tutorial](../tutorials/benchmark.md). Each function returns a
 matplotlib axes or figure, so you can adjust and save it as usual.
 
 ## Step 1: Load a results table
@@ -44,8 +44,8 @@ ax.figure.savefig("k_estimates.png", dpi=150, bbox_inches="tight")
 
 * Each dot is one run; methods are sorted by their median estimated k.
 * The dashed line is the true k (7), read from `k_true`. Pass `k_true=` to draw another.
-* Dots on the line found the right number of domains. Here only DR.SC did; BNPSpace, PRECAST
-  and iSC.MEB found far too few, and SC.MEB and SpatialDE2 too many.
+* Dots on the line found the right number of domains; dots below it found too few, above it
+  too many. What the figure shows for the ten methods: [Benchmark the ten methods](../tutorials/benchmark.md#3-estimated-k-and-accuracy).
 
 ## Step 3: Run time and memory
 

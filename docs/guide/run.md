@@ -145,9 +145,7 @@ estimated k, run time and memory, but cannot score the labels.
 
 ## GPU or CPU?
 
-Three methods have GPU code: CellCharter (scVI training), DeepST (graph autoencoder) and
-SpatialDE2 (TensorFlow). With `device="gpu"` they run on GPU `gpu_id`; the run folder records
-`"device_used": "gpu"`.
+CellCharter, DeepST and SpatialDE2 can run on a GPU; `gpu_id` picks which one:
 
 ```python
 kdb.run("CellCharter", h5ad, kmax=30, device="gpu", gpu_id=0)
@@ -160,8 +158,8 @@ kdb.run("PRECAST", h5ad, kmax=30, device="gpu")
 # UserWarning: PRECAST has no GPU implementation; running it on the CPU.
 ```
 
-How the device is passed to each method is in
-[How kDomainBench works](../methods.md#cpu-and-gpu).
+How much faster the GPU is, and whether the result changes:
+[CPU versus GPU](../tutorials/cpu_vs_gpu.md).
 
 ## Command line
 

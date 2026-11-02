@@ -41,29 +41,46 @@ for m in kdb.list_methods(gpu_only=True):
 ```python
 summary = kdb.load_results("devices/")
 summary[["method", "device_used", "k_estimated", "ARI", "wall_time_s", "peak_rss_mb"]]
+#         method device_used  k_estimated   ARI  wall_time_s  peak_rss_mb
+#    CellCharter         cpu            4  0.49       978.14       2068.9
+#    CellCharter         gpu            4  0.58       291.24       2062.8
+#         DeepST         cpu            4  0.55      3233.28       2932.7
+#         DeepST         gpu            5  0.55       216.43       3350.9
+#     SpatialDE2         cpu           10  0.41      4156.90       2900.3
+#     SpatialDE2         gpu           10  0.41       571.77       1581.7
 
 kdb.pl.plot_runtime(summary)                          # CPU and GPU bars side by side
-kdb.pl.plot_runtime(summary, metric="peak_rss_mb")
 ```
 
+![Run time on CPU and GPU](../assets/runtime_cpu_gpu.png){ width="420" }
+
+On one RTX 3090, DeepST ran 15 times faster than on the CPU (4 minutes instead of 54),
+SpatialDE2 7 times (10 minutes instead of 69) and CellCharter 3 times (5 minutes instead of 16).
 `peak_rss_mb` is host memory. GPU memory is not recorded; watch it with `nvidia-smi` while the
-run is going.
+run is going. Here no run used more than about 4.5 GB of it.
 
 ## 4. Do the domains change?
 
 GPU kernels are not bit-identical to CPU kernels, so the trained embeddings, and sometimes the
-chosen resolution or k, can differ a little between devices even with the same seed. Compare
-the two runs of each method with ARI:
+chosen resolution or k, can differ between devices even with the same seed. Compare the two
+runs of each method with ARI:
 
 ```python
 from sklearn.metrics import adjusted_rand_score
 
 for m in kdb.list_methods(gpu_only=True):
     cpu, gpu = runs[m, "cpu"], runs[m, "gpu"]
-    print(m, adjusted_rand_score(cpu.loc[gpu.index, "cluster"], gpu["cluster"]))
+    print(m, round(adjusted_rand_score(cpu.loc[gpu.index, "cluster"], gpu["cluster"]), 2))
+# CellCharter 0.79
+# DeepST 0.58
+# SpatialDE2 1.0
 ```
 
 An ARI of 1 means the same domains on both devices.
 
-!!! info "Results pending"
-    The GPU runs of this benchmark have not been run yet. Their times and ARIs will be added here.
+* **SpatialDE2** gave the same domains on both devices.
+* **CellCharter** found k = 4 on both, with partly different domains (ARI 0.79 between them).
+* **DeepST** found k = 4 on the CPU and k = 5 on the GPU: the device changed its estimate.
+
+So a GPU run is much faster but not a drop-in copy of a CPU run. Compare methods on the same
+device.
