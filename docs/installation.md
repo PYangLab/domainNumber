@@ -41,8 +41,9 @@ Each method runs in one of three environments, so their dependencies never confl
 bash envs/install_envs.sh
 ```
 
-It creates both environments from the lock files and installs `kdomainbench` into `kdb_py`.
-To create them one at a time:
+This creates the conda environments `kdb_py` and `kdb_spatialde`, with the package versions
+fixed in `envs/`, and installs the `kdomainbench` package into `kdb_py`. The script runs these
+three commands, which you can also run yourself:
 
 ```bash title="terminal"
 conda env create -n kdb_py        -f envs/kdb_py.yml
