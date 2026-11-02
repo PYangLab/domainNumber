@@ -94,4 +94,3 @@ has each method's model, criterion and settings.
   SpatialDE2 took 40–75 minutes each, CellCharter and SC.MEB 15–18, and DR.SC, SpaGCN and
   iSC.MEB under 10. [Benchmark the ten methods](benchmark.md) lists every run time and peak memory.
 * Next: [run a method](run.md).
-Next: [run a method](run.md).
