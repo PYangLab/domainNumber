@@ -161,6 +161,5 @@ kdomainbench summarize --csv summary.csv --plot k.png
 ## Next steps
 
 * Run every method and compare their k: [Benchmark the ten methods](tutorials/benchmark.md).
-* Run the GPU methods on both devices: [CPU versus GPU](tutorials/cpu_vs_gpu.md).
 * Bring your own Visium sample: [Your own data](tutorials/run.md#your-own-data).
 * Every function and its parameters: [API reference](api.md).

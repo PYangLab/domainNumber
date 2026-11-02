@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BASICS = ["tutorials/discover.md", "tutorials/run.md", "tutorials/evaluate.md", "tutorials/plot.md"]
-PAGES = ["installation.md", "quickstart.md", *BASICS, "tutorials/benchmark.md", "tutorials/cpu_vs_gpu.md", "api.md", "reference/setup.md"]
+PAGES = ["installation.md", "quickstart.md", *BASICS, "tutorials/benchmark.md", "api.md", "reference/setup.md"]
 FAST = {"SpaGCN", "DR.SC", "SC.MEB", "iSC.MEB"}
 SKIP_SHELL = re.compile(r"--gpu|-d gpu|-m all|^(git|mamba|conda|bash|Rscript|export|nvidia-smi|wget|"
                         r"python scripts/)")

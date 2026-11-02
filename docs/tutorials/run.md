@@ -158,8 +158,8 @@ kdb.run("PRECAST", h5ad, kmax=30, device="gpu")
 # UserWarning: PRECAST has no GPU implementation; running it on the CPU.
 ```
 
-How much faster the GPU is, and whether the result changes:
-[CPU versus GPU](cpu_vs_gpu.md).
+A GPU run is faster but can give a different result: on the 4k sample, DeepST found k = 4 on
+the CPU and k = 5 on the GPU. Compare methods on the same device.
 
 ## Command line
 

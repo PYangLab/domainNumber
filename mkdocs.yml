@@ -96,7 +96,6 @@ nav:
       - Evaluate a run: tutorials/evaluate.md
       - Load and plot results: tutorials/plot.md
       - Benchmark the ten methods: tutorials/benchmark.md
-      - CPU versus GPU: tutorials/cpu_vs_gpu.md
   - How kDomainBench works: methods.md
   - API reference:
       - api.md
