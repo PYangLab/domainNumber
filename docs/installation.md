@@ -80,16 +80,17 @@ BNPSpace is not a package: its C++ code ships with kDomainBench and is compiled 
     SC.MEB 1.1, BayesSpace 1.14.0, Seurat 5.3.0 and zellkonverter 1.14.1. `envs/kdb_r.lock.csv`
     lists every R package with its version.
 
-??? note "Keep the R packages apart from your own"
-    Install them into a separate library, and point kDomainBench at it:
+??? note "Optional: install the R packages into their own folder"
+    By default the script installs into your usual R library, next to your other packages.
+    To keep them separate, give it a folder, and tell kDomainBench to use that folder:
 
     ```bash title="terminal"
     Rscript envs/install_r_packages.R ~/kdb_r/library
     export KDB_R_LIB=~/kdb_r/library
     ```
 
-    With `KDB_R_LIB` set, the R methods see only this library and base R, not your user and
-    site libraries.
+    The R methods then use only the packages in that folder (plus base R), so updating your
+    own packages does not change them.
 
 ??? note "Lock files"
     | File | What it locks |
