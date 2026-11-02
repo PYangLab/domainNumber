@@ -115,10 +115,6 @@ The methods were written for 10x Visium data. The `.h5ad` file needs:
 | `obsm["spatial"]` | CellCharter, DeepST, SpatialDE2, plotting | 2-D coordinates (spots × 2) |
 | `obs["clusters"]` | scoring only (optional) | ground-truth domain labels |
 
-??? note "The tiled DLPFC files"
-    `D1_151507_8k.h5ad` and the larger files have no `pixel_row` / `pixel_col`, so SpaGCN stops
-    on them. Add the columns from `obsm["spatial"]` first (see below) to run it.
-
 ## Your own data
 
 A Space Ranger output folder becomes an input file in a few lines:

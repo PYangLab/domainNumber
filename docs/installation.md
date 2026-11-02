@@ -22,8 +22,12 @@ cd kDomainBench
 
 The repository holds the package (`src/kdomainbench/`), one script per method
 (`src/kdomainbench/methods/`), the environment files (`envs/`) and the 4k test file
-(`data/`). `--single-branch` skips the `data` branch, which holds 700 MB of larger test files
-([Get the data](#get-the-data)).
+(`data/`, see [Get the data](#get-the-data)).
+
+!!! note "Private repository"
+    The repository is private: `git clone` asks for your GitHub login, and works only for
+    members. Use a [personal access token](https://github.com/settings/tokens) as the password,
+    or clone over SSH (`git@github.com:liuchunlei0430/kDomainBench.git`).
 
 ## Step 2: Create the environments
 
@@ -115,47 +119,15 @@ The tutorials use the DLPFC Visium sample **151507** from the spatialLIBD study
 cortical-layer annotation of the study, Layer1–Layer6 and white matter (WM), which is the
 ground truth (**k = 7**).
 
-| File | Spots | Size | Content | Where |
-|---|---:|---:|---|---|
-| `D1_151507_4k.h5ad` | 4 220 | 13 MB | sample 151507 | `main` branch, `data/` |
-| `D1_151507_8k.h5ad` | 8 440 | 17 MB | 2 tiled copies of 151507 | `data` branch |
-| `D1_151507_16k.h5ad` | 16 880 | 33 MB | 4 copies | `data` branch |
-| `D1_151507_25k.h5ad` | 25 320 | 49 MB | 6 copies | `data` branch |
-| `D1_151507_37k.h5ad` | 37 980 | 73 MB | 9 copies | `data` branch |
-| `D1_151507_50k.h5ad` | 50 640 | 97 MB | 12 copies | `data` branch |
-| `D1_151507_67k.h5ad` | 67 520 | 129 MB | 16 copies | `data` branch, 2 parts |
-| `D1_151507_84k.h5ad` | 84 400 | 162 MB | 20 copies | `data` branch, 2 parts |
-| `D1_151507_105k.h5ad` | 105 500 | 202 MB | 25 copies | `data` branch, 3 parts |
+The file comes with the code: after Step 1 it is `data/D1_151507_4k.h5ad` (13 MB, 4 220 spots,
+9 948 genes).
 
-The larger files repeat sample 151507 as tiles (`obs["tile_id"]`), so the true k stays 7 while
-the number of spots grows. They are for runtime and memory scaling; the tutorials use the 4k file.
-
-The 4k file comes with the code: after Step 1 it is `data/D1_151507_4k.h5ad`. The larger files
-are on the `data` branch of the same repository. Files over 100 MB are split into parts there
-(GitHub's file size limit), so join them after the download:
-
-```bash title="terminal"
-git clone --branch data --single-branch --depth 1 \
-    https://github.com/liuchunlei0430/kDomainBench.git kDomainBench-data
-cd kDomainBench-data
-for f in D1_151507_67k D1_151507_84k D1_151507_105k; do
-    cat $f.h5ad.part* > $f.h5ad && rm $f.h5ad.part*
-done
-md5sum -c md5sums.txt          # every file: OK
-```
-
-!!! note "Private repository"
-    The repository is private: `git clone` asks for your GitHub login, and works only for
-    members. Use a [personal access token](https://github.com/settings/tokens) as the password,
-    or clone over SSH (`git@github.com:liuchunlei0430/kDomainBench.git`).
-
-??? note "What each file contains"
+??? note "What the file contains"
     * `X`: raw UMI counts, 9 948 genes
     * `obs["array_row"]`, `obs["array_col"]`: Visium grid coordinates
     * `obsm["spatial"]`: 2-D spot coordinates
     * `obs["clusters"]`: the ground-truth layer of each spot (`Layer1` … `Layer6`, `WM`)
-    * `obs["pixel_row"]`, `obs["pixel_col"]`: pixel coordinates, **4k file only**. SpaGCN reads
-      them, so it cannot run on the larger files as they are.
+    * `obs["pixel_row"]`, `obs["pixel_col"]`: pixel coordinates (read by SpaGCN)
 
     [Run a method](guide/run.md#inputs) lists which field each method reads.
 
