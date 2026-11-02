@@ -6,7 +6,7 @@ environments, which kDomainBench calls for you.
 
 !!! tip "Summary"
     ```bash
-    git clone https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
+    git clone --single-branch https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
     bash envs/install_envs.sh                 # the three environments
     conda activate kdb_py
     kdomainbench check                        # every environment answers
@@ -15,12 +15,14 @@ environments, which kDomainBench calls for you.
 ## Step 1: Get the code
 
 ```bash title="terminal"
-git clone https://github.com/liuchunlei0430/kDomainBench.git
+git clone --single-branch https://github.com/liuchunlei0430/kDomainBench.git
 cd kDomainBench
 ```
 
 The repository holds the package (`src/kdomainbench/`), one script per method
-(`src/kdomainbench/methods/`) and the environment lock files (`envs/`).
+(`src/kdomainbench/methods/`), the environment lock files (`envs/`) and the 4k test file
+(`data/`). `--single-branch` skips the `data` branch, which holds 700 MB of larger test files
+([Get the data](#get-the-data)).
 
 ## Step 2: Create the environments
 
@@ -125,23 +127,39 @@ The tutorials use the DLPFC Visium sample **151507** from the spatialLIBD study
 cortical-layer annotation of the study, Layer1–Layer6 and white matter (WM), which is the
 ground truth (**k = 7**).
 
-| File | Spots | Size | Content |
-|---|---:|---:|---|
-| `D1_151507_4k.h5ad` | 4 220 | 13 MB | sample 151507 |
-| `D1_151507_8k.h5ad` | 8 440 | 17 MB | 2 tiled copies of 151507 |
-| `D1_151507_16k.h5ad` | 16 880 | 33 MB | 4 copies |
-| `D1_151507_25k.h5ad` | 25 320 | 49 MB | 6 copies |
-| `D1_151507_37k.h5ad` | 37 980 | 73 MB | 9 copies |
-| `D1_151507_50k.h5ad` | 50 640 | 97 MB | 12 copies |
-| `D1_151507_67k.h5ad` | 67 520 | 129 MB | 16 copies |
-| `D1_151507_84k.h5ad` | 84 400 | 162 MB | 20 copies |
-| `D1_151507_105k.h5ad` | 105 500 | 202 MB | 25 copies |
+| File | Spots | Size | Content | Where |
+|---|---:|---:|---|---|
+| `D1_151507_4k.h5ad` | 4 220 | 13 MB | sample 151507 | `main` branch, `data/` |
+| `D1_151507_8k.h5ad` | 8 440 | 17 MB | 2 tiled copies of 151507 | `data` branch |
+| `D1_151507_16k.h5ad` | 16 880 | 33 MB | 4 copies | `data` branch |
+| `D1_151507_25k.h5ad` | 25 320 | 49 MB | 6 copies | `data` branch |
+| `D1_151507_37k.h5ad` | 37 980 | 73 MB | 9 copies | `data` branch |
+| `D1_151507_50k.h5ad` | 50 640 | 97 MB | 12 copies | `data` branch |
+| `D1_151507_67k.h5ad` | 67 520 | 129 MB | 16 copies | `data` branch, 2 parts |
+| `D1_151507_84k.h5ad` | 84 400 | 162 MB | 20 copies | `data` branch, 2 parts |
+| `D1_151507_105k.h5ad` | 105 500 | 202 MB | 25 copies | `data` branch, 3 parts |
 
 The larger files repeat sample 151507 as tiles (`obs["tile_id"]`), so the true k stays 7 while
 the number of spots grows. They are for runtime and memory scaling; the tutorials use the 4k file.
 
-!!! warning "Download"
-    The prepared `.h5ad` files are not published yet. The download link will go here.
+The 4k file comes with the code: after Step 1 it is `data/D1_151507_4k.h5ad`. The larger files
+are on the `data` branch of the same repository. Files over 100 MB are split into parts there
+(GitHub's file size limit), so join them after the download:
+
+```bash title="terminal"
+git clone --branch data --single-branch --depth 1 \
+    https://github.com/liuchunlei0430/kDomainBench.git kDomainBench-data
+cd kDomainBench-data
+for f in D1_151507_67k D1_151507_84k D1_151507_105k; do
+    cat $f.h5ad.part* > $f.h5ad && rm $f.h5ad.part*
+done
+md5sum -c md5sums.txt          # every file: OK
+```
+
+!!! note "Private repository"
+    The repository is private: `git clone` asks for your GitHub login, and works only for
+    members. Use a [personal access token](https://github.com/settings/tokens) as the password,
+    or clone over SSH (`git@github.com:liuchunlei0430/kDomainBench.git`).
 
 ??? note "What each file contains"
     * `X`: raw UMI counts, 9 948 genes

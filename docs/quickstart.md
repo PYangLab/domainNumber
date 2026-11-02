@@ -75,7 +75,8 @@ m.language, m.env, m.gpu, m.uses_kmax
 
 ## Step 2: Get the data
 
-Download `D1_151507_4k.h5ad` as described in [Get the data](installation.md#get-the-data). It
+The test file comes with the code: `data/D1_151507_4k.h5ad` in the cloned repository
+([Get the data](installation.md#get-the-data)). Run the steps below from the repository folder. It
 is DLPFC sample 151507: 4 220 spots, 9 948 genes, and 7 annotated layers as the ground truth.
 
 ```python
