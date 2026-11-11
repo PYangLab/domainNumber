@@ -1,4 +1,5 @@
-# Tools to build and preview the documentation site (pip install -r docs/requirements.txt)
+# Tools to build and preview the documentation site (pip install -r docs/requirements.txt).
+# They need Python 3.11 or later.
 mkdocs==1.6.1
 mkdocs-material==9.5.50
 mkdocstrings==1.0.8

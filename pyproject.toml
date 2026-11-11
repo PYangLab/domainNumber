@@ -4,20 +4,33 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kdomainbench"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Benchmark of spatial-domain number (k) estimation methods with one interface"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = ["numpy", "pandas", "matplotlib", "scikit-learn", "anndata"]
+keywords = ["spatial transcriptomics", "spatial domains", "clustering", "number of clusters", "benchmark", "Visium"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 
-[project.optional-dependencies]
-docs = ["mkdocs==1.6.1", "mkdocs-material==9.5.50", "mkdocstrings==1.0.8", "mkdocstrings-python==2.0.10", "mkdocs-autorefs==1.4.5", "griffe==2.4.1", "pymdown-extensions==10.21.3"]  # = docs/requirements.txt
+[project.urls]
+Source = "https://github.com/liuchunlei0430/kDomainBench"
+Issues = "https://github.com/liuchunlei0430/kDomainBench/issues"
+Changelog = "https://github.com/liuchunlei0430/kDomainBench/blob/main/CHANGELOG.md"
 
 [project.scripts]
 kdomainbench = "kdomainbench.cli:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "kdomainbench.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-kdomainbench = ["methods/*.py", "methods/*.R", "methods/bnpspace_R/*"]
+kdomainbench = ["methods/*.py", "methods/*.R", "methods/bnpspace_R/*", "metric_scripts/*"]

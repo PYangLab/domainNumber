@@ -14,7 +14,10 @@ REPLACE = {
 DROP = re.compile(r"^\s*- (kdomainbench)==")
 HEADER = {
     "kdb_py": "# kdomainbench: CellCharter, DeepST, SpaGCN (+ kdomainbench). torch 2.5.1+cu124 works on CPU and GPU.\n",
-    "kdb_spatialde": "# kdomainbench: SpatialDE2. tensorflow[and-cuda] 2.15.1 works on CPU and GPU.\n",
+    "kdb_spatialde": "# kdomainbench: SpatialDE2. tensorflow[and-cuda] 2.15.1 works on CPU and GPU.\n"
+                     "# SpatialDE is pinned to upstream commit 6dbdb55. The original env was installed from a local copy of that commit\n"
+                     "# with two edits that do not affect kdomainbench: `Literal` imported from typing_extensions, and the default\n"
+                     "# TissueSegmentationParameters(nclasses=2) (run_spatialde.py always passes nclasses=kmax explicitly).\n",
 }
 
 src, dst, name = sys.argv[1:4]

@@ -1,0 +1,28 @@
+# The two checks of CONTRIBUTING.md. The tests run on the lowest Python that pyproject.toml
+# allows and on a recent one. The site tools in docs/requirements.txt need Python 3.11 or later.
+name: checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e . pytest
+      - run: python -m pytest -q
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r docs/requirements.txt
+      - run: mkdocs build --strict

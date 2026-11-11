@@ -17,7 +17,6 @@ df <- as.data.frame(colData(sce))
 meta_data <- data.frame(
   row        = df$array_row,
   col        = df$array_col,
-  annotation = df$clusters,
   row.names  = colnames(counts),
   check.names = FALSE
 )

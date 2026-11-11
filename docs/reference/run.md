@@ -1,6 +1,6 @@
 # Run
 
-Run methods, each in its own environment. Needs the environments from
+Run methods, each in the environment it needs. Needs the environments from
 [Installation](../installation.md).
 
 | Name | Summary |

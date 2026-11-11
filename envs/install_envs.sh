@@ -4,13 +4,14 @@
 #   bash envs/install_envs.sh            # both
 #   bash envs/install_envs.sh py         # one: py | spatialde
 #   KDB_ENVS_DIR=/path/to/envs bash envs/install_envs.sh
-#                                        # create them as /path/to/envs/kdb_* instead of named envs;
-#                                        # then point KDB_PY_PYTHON etc. at them
+#                                        # create them as /path/to/envs/kdb_* instead of named envs
+#                                        # (kdomainbench finds kdb_spatialde next to kdb_py)
 # The same environments work on CPU-only and GPU machines: torch (cu124) and tensorflow[and-cuda]
 # bring their own CUDA libraries and fall back to the CPU when no GPU is visible.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-CONDA="${CONDA:-$(command -v mamba || command -v conda)}"
+CONDA="${CONDA:-$(command -v mamba || command -v conda || true)}"
+[ -n "$CONDA" ] || { echo "conda or mamba not found on PATH. Load it (for example 'module load conda'), install Miniforge from https://conda-forge.org/download/ and open a new terminal, or set CONDA=/path/to/conda" >&2; exit 1; }
 
 install_py() {
   "$CONDA" env create $(target kdb_py) -f "$HERE/kdb_py.yml"

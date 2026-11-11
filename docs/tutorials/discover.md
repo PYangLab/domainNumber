@@ -11,7 +11,7 @@ to list them, what each one needs, and how each one picks k.
     m = kdb.get_method("DR.SC")           # one method's settings
     ```
 
-## The ten methods
+## List the methods
 
 ```python
 import kdomainbench as kdb
@@ -20,7 +20,7 @@ kdb.list_methods()
 #  'CellCharter', 'DeepST', 'SpaGCN', 'SpatialDE2']
 ```
 
-The same table from the command line:
+`kdomainbench methods` prints them as a table:
 
 ```text title="kdomainbench methods"
 method      language env        GPU  uses kmax
@@ -41,15 +41,14 @@ is `kdb_spatialde` ([Installation](../installation.md#step-2-create-the-environm
 
 ## Filter by what you need
 
-**A GPU.** Three methods can use one:
+Three methods can use a GPU:
 
 ```python
 kdb.list_methods(gpu_only=True)
 # ['CellCharter', 'DeepST', 'SpatialDE2']
 ```
 
-**A cap on k.** Eight methods use `kmax` as the largest k they consider. DeepST and SpaGCN choose k by themselves
-and ignore `kmax`:
+Two methods do not take `kmax`:
 
 ```python
 [m for m in kdb.list_methods() if not kdb.get_method(m).uses_kmax]
@@ -59,7 +58,7 @@ and ignore `kmax`:
 ## Inspect a single method
 
 ```python
-m = kdb.get_method("cellcharter")      # case-insensitive; aliases such as "drsc" work too
+m = kdb.get_method("cellcharter")      # case-insensitive, and aliases such as "drsc" work too
 m.name, m.language, m.env, m.gpu, m.uses_kmax
 # ('CellCharter', 'Python', 'py', True, True)
 m.reference
@@ -68,29 +67,21 @@ m.script
 # 'run_cellcharter.py'
 ```
 
-??? note "All fields"
-    | Field | Meaning |
-    |---|---|
-    | `name` | canonical name |
-    | `language` | `"R"` or `"Python"` |
-    | `env` | environment key: `"r"`, `"py"` or `"spatialde"` |
-    | `script` | the method's script in `src/kdomainbench/methods/` |
-    | `gpu` | `True` if `device="gpu"` really runs on a GPU |
-    | `uses_kmax` | `False` if the method chooses k by itself |
-    | `big_stack` | `True` if the method needs `ulimit -s unlimited` (PRECAST, iSC.MEB) |
-    | `reference` | the method's documentation or repository |
-    | `aliases` | other accepted names |
+[`kdb.Method`](../reference/methods.md#kdomainbench.registry.Method) lists every field of the
+record.
 
 ## How each method picks k
 
-Six methods fit K = 2 … `kmax` and keep the best by a model-selection score (BIC, stability,
-likelihood elbow); BNPSpace and SpatialDE2 start from `kmax` and drop empty clusters; DeepST and
-SpaGCN tune a clustering resolution instead. [How kDomainBench works](../methods.md#the-ten-methods)
-has each method's model, criterion and settings.
+The ten methods choose k in three ways:
 
-## Before running
+* **Fit every k and keep the best.** PRECAST, SC.MEB, BayesSpace, DR.SC, iSC.MEB and CellCharter
+  fit k = 2 … `kmax` and keep one by a model-selection score (BIC, clustering stability or a
+  likelihood elbow).
+* **Start high and drop empty domains.** BNPSpace and SpatialDE2 start from `kmax` domains and
+  report those that hold spots at the end. BNPSpace can also add domains, up to 30.
+* **Tune a resolution.** DeepST and SpaGCN try a range of clustering resolutions and keep the
+  best-scoring one. The number of domains follows from it.
 
-* Run times differ a lot. On the 4k sample on a CPU, PRECAST, BayesSpace, BNPSpace, DeepST and
-  SpatialDE2 took 40–75 minutes each, CellCharter and SC.MEB 15–18, and DR.SC, SpaGCN and
-  iSC.MEB under 10. [Benchmark the ten methods](benchmark.md) lists every run time and peak memory.
-* Next: [run a method](run.md).
+[How kDomainBench works](../overview.md#the-ten-methods) has each method's model and criterion.
+
+Next: [Run a method](run.md).
