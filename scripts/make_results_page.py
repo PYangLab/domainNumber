@@ -1,6 +1,12 @@
-"""Build docs/assets/*.png and snippets/results_table.md from a folder of kdomainbench runs.
+"""Build the table and figures of the benchmark tutorial from a folder of kdomainbench runs.
 
 Usage: python scripts/make_results_page.py <results_root> <h5ad>
+
+Uses the runs of <h5ad> under <results_root>, without its GPU runs. Writes
+snippets/results_table.md and, in docs/assets/, summary_5k.csv, k_estimates.png,
+spatial_domains.png and reference_annotation.png, and metrics.png when the runs were scored
+with `kdomainbench metrics`. The pages show no run times, so the table and the CSV file leave
+them out.
 """
 import sys
 from pathlib import Path
@@ -11,55 +17,58 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 import kdomainbench as kdb  # noqa: E402
 
-root, h5ad = sys.argv[1], sys.argv[2]
-docs = Path(__file__).resolve().parents[1] / "docs"
-assets = docs / "assets"
-assets.mkdir(parents=True, exist_ok=True)
-
-summary = kdb.load_results(root)
-ok = summary[summary["success"]]
-gpu_methods = set(kdb.list_methods(gpu_only=True))
-
-ax = kdb.pl.plot_k_estimates(ok[ok["device_used"] == "cpu"])
-ax.set_title("Estimated k on D1_151507_4k (CPU, kmax = 30)")
-ax.figure.tight_layout()
-ax.figure.savefig(assets / "k_estimates.png", dpi=150)
-plt.close(ax.figure)
-
-ax = kdb.pl.plot_runtime(ok)
-ax.set_title("Wall time on D1_151507_4k")
-ax.figure.tight_layout()
-ax.figure.savefig(assets / "runtime.png", dpi=150)
-plt.close(ax.figure)
-
-cpu_runs = {r.method: kdb.read_clusters(r.out_dir) for r in ok[ok["device_used"] == "cpu"].itertuples()}
-order = [m for m in kdb.list_methods() if m in cpu_runs]
-fig = kdb.pl.plot_spatial_grid({m: cpu_runs[m] for m in order}, h5ad, ncols=5, s=3)
-fig.savefig(assets / "spatial_domains.png", dpi=130)
-plt.close(fig)
-
-truth = kdb.ground_truth(h5ad).to_frame("cluster")
-ax = kdb.pl.plot_spatial(truth, h5ad, s=6, title=f"Ground truth (k = {truth['cluster'].nunique()})")
-ax.figure.tight_layout()
-ax.figure.savefig(assets / "ground_truth.png", dpi=130)
-plt.close(ax.figure)
+REPO = Path(__file__).resolve().parents[1]
+ASSETS = REPO / "docs" / "assets"
 
 
-def fmt(v, nd=2):
-    return "–" if v != v else (f"{v:.{nd}f}" if isinstance(v, float) else str(v))
+def save(fig, name, dpi=150):
+    fig.savefig(ASSETS / name, dpi=dpi, bbox_inches="tight")
+    plt.close(fig)
 
 
-lines = ["| Method | Device | GPU support | k estimated | k error | ARI | NMI | Wall time (s) | Peak RAM (GB) |",
-         "|---|---|:---:|---:|---:|---:|---:|---:|---:|"]
-for r in ok.sort_values(["method", "device_used"]).itertuples():
-    lines.append(f"| {r.method} | {r.device_used.upper()} | {'✓' if r.method in gpu_methods else '–'} | "
-                 f"{r.k_estimated} | {int(r.k_error):+d} | {fmt(r.ARI)} | {fmt(r.NMI)} | "
-                 f"{r.wall_time_s:.0f} | {r.peak_rss_mb / 1000:.1f} |")
-failed = summary[~summary["success"]]
-if len(failed):
-    lines += ["", "Failed runs: " + ", ".join(f"{r.method} ({r.device_used})" for r in failed.itertuples())]
-(docs.parent / "snippets").mkdir(exist_ok=True)
-(docs.parent / "snippets" / "results_table.md").write_text("\n".join(lines) + "\n")
-# local paths (h5ad, out_dir) stay out of the published table
-summary.drop(columns=["h5ad", "out_dir"], errors="ignore").to_csv(docs / "assets" / "summary_4k.csv", index=False)
-print("\n".join(lines))
+def table(summary):
+    """Markdown table of the successful runs, the smallest k error first."""
+    ok = summary[summary["success"]]
+    ok = ok.assign(abs_err=ok["k_error"].abs()).sort_values(["abs_err", "ARI"], ascending=[True, False])
+    lines = ["| Method | Estimated k | k error | ARI | NMI |", "|---|---:|---:|---:|---:|"]
+    for r in ok.itertuples():
+        lines.append(f"| {r.method} | {r.k_estimated} | {r.k_error:+d} | {r.ARI:.2f} | {r.NMI:.2f} |")
+    failed = summary[~summary["success"]]
+    if len(failed):
+        lines += ["", "Failed runs: " + ", ".join(failed["method"])]
+    return "\n".join(lines).replace("| +0 |", "| 0 |") + "\n"
+
+
+def summary_figures(ok):
+    """Estimated k and, where the runs have them, the twelve metrics per method."""
+    device = "CPU, " if ok["device_used"].eq("cpu").all() else ""
+    ax = kdb.pl.plot_k_estimates(ok)
+    ax.set_title(f"Estimated k on {ok['dataset'].iloc[0]} ({device}kmax = {ok['kmax'].iloc[0]})")
+    save(ax.figure, "k_estimates.png")
+    if "spARI" in ok:                   # a column of load_results when a run has its metric.csv
+        save(kdb.pl.plot_metrics(ok).figure, "metrics.png")
+
+
+def domain_maps(ok, h5ad):
+    """The domains of every successful run, and the reference annotation, on the tissue."""
+    runs = {r.method: kdb.read_clusters(r.out_dir) for r in ok.itertuples()}
+    fig = kdb.pl.plot_spatial_grid({m: runs[m] for m in kdb.list_methods() if m in runs}, h5ad, ncols=5, s=3)
+    save(fig, "spatial_domains.png", dpi=130)
+    reference = kdb.reference_annotation(h5ad).to_frame("cluster")
+    ax = kdb.pl.plot_spatial(reference, h5ad, s=6, legend=True,
+                             title=f"Reference annotation (k = {reference['cluster'].nunique()})")
+    save(ax.figure, "reference_annotation.png", dpi=130)
+
+
+if __name__ == "__main__":
+    root, h5ad = sys.argv[1], sys.argv[2]
+    summary = kdb.load_results(root)
+    summary = summary[(summary["dataset"] == Path(h5ad).stem) & (summary["device_requested"].fillna("cpu") == "cpu")]
+    ok = summary[summary["success"]]
+    (REPO / "snippets" / "results_table.md").write_text(table(summary))
+    summary_figures(ok)
+    domain_maps(ok, h5ad)
+    # local paths, run times and columns without any value stay out of the published table
+    hidden = ["h5ad", "out_dir", "wall_time_s", "started"]
+    summary.drop(columns=hidden, errors="ignore").dropna(axis=1, how="all").to_csv(ASSETS / "summary_5k.csv", index=False)
+    print(table(summary))

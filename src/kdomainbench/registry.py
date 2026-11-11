@@ -1,13 +1,13 @@
 """Method registry: which script, which environment and which command line each method uses."""
 from dataclasses import dataclass, field
-from typing import Callable, List
+from typing import Callable
 
 
 @dataclass(frozen=True)
 class Method:
     """One method: its script, its environment and how it is called.
 
-    Get one with [get_method][kdomainbench.get_method]; you do not create them yourself.
+    Get one with [get_method][kdomainbench.get_method]. You do not create them yourself.
 
     Attributes
     ----------
@@ -20,26 +20,35 @@ class Method:
     script : str
         The method's script in ``kdomainbench/methods/``.
     argv : callable
-        ``(h5ad, out_dir, kmax) -> list[str]``, the script's arguments.
+        ``(h5ad, run_folder, kmax) -> list[str]``, the script's arguments.
     gpu : bool
         ``True`` if ``device="gpu"`` really runs the method on a GPU.
     uses_kmax : bool
         ``False`` if the method chooses k by itself and ignores ``kmax``.
     big_stack : bool
         ``True`` if the method needs ``ulimit -s unlimited``.
+    kmax_limit : int or None
+        Largest ``kmax`` the method accepts, if it has a limit.
     reference : str
         The method's documentation or repository.
     aliases : tuple of str
         Other accepted names, e.g. ``("drsc",)``.
+
+    Examples
+    --------
+    >>> m = kdb.get_method("BNPSpace")
+    >>> m.language, m.env, m.gpu, m.kmax_limit
+    ('R', 'r', False, 30)
     """
     name: str
-    language: str            # "R" or "Python"
-    env: str                 # key in kdomainbench.config.ENVS
-    script: str              # file in kdomainbench/methods/
-    argv: Callable[[str, str, int], List[str]]   # (h5ad, out_dir, kmax) -> script arguments
-    gpu: bool = False        # True: --device gpu really runs on the GPU
-    uses_kmax: bool = True   # False: the method picks k by itself and ignores kmax
-    big_stack: bool = False  # needs `ulimit -s unlimited`
+    language: str
+    env: str
+    script: str
+    argv: Callable[[str, str, int], list] = field(repr=False)
+    gpu: bool = False
+    uses_kmax: bool = True
+    big_stack: bool = False
+    kmax_limit: int = None
     reference: str = ""
     aliases: tuple = field(default_factory=tuple)
 
@@ -55,7 +64,7 @@ _METHODS = [
            lambda h, o, k: [h, o, str(k)],
            reference="https://www.ezstatconsulting.com/BayesSpace/"),
     Method("BNPSpace", "R", "r", "bnpspace.R",
-           lambda h, o, k: [h, o, str(k)],
+           lambda h, o, k: [h, o, str(k)], kmax_limit=30,    # `int Kmax = 30` in bnpspace_R/model.cpp
            reference="https://github.com/new-zbc/BNPSpace"),
     Method("DR.SC", "R", "r", "drsc.R",
            lambda h, o, k: [h, o, str(k), "Visium"],
@@ -115,7 +124,7 @@ def get_method(name: str) -> Method:
         raise ValueError(f"unknown method {name!r}; choose from {list(METHODS)}") from None
 
 
-def list_methods(gpu_only: bool = False) -> List[str]:
+def list_methods(gpu_only: bool = False) -> list:
     """Return the names of the methods.
 
     Parameters

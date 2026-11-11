@@ -1,152 +1,47 @@
 # Quickstart
 
-Five steps take you from finding a method to a figure of its domains. Step 3 runs a method;
-it needs the environments from [Installation](installation.md). All outputs below are from real
-runs on `D1_151507_4k.h5ad` ([Get the data](installation.md#get-the-data)).
+Five steps take you from finding a method to a figure of its domains. Only step 3 runs a
+method. It needs Linux and the environments from [Installation](installation.md). The outputs
+shown are those of the paper's benchmark run on sample 151509
+([Example data](installation.md#example-data)), and a run of yours can differ a little
+([FAQ](faq.md#will-i-get-the-same-result-twice)).
 
-??? tip "Key terms"
-    spot
-    :   One Visium capture spot: a row of the `.h5ad` file.
+For a sample of your own, with or without an annotation, see
+[Your own data](how-to/own_data.md). [Key terms](#key-terms) at the end of this page explains
+the words used on this site.
 
-    spatial domain
-    :   A group of spots with similar expression that also lie together, such as a cortical layer.
-
-    k
-    :   The number of spatial domains. The *true k* comes from the manual annotation; the
-        *estimated k* is the number of distinct labels a method returns.
-
-    kmax
-    :   The largest k a method may consider. Most methods try K = 2 … kmax and pick one.
-
-    ground truth
-    :   The manual domain label of each spot, in `obs["clusters"]`.
-
-    device
-    :   `"cpu"` or `"gpu"`. Only CellCharter, DeepST and SpatialDE2 use a GPU.
-
-    run folder
-    :   The folder one run writes: `cluster_results.csv`, `run.log` and `run_info.json`.
-
-    summary table
-    :   One row per run, from `kdb.load_results`: method, device, estimated k, scores, time, memory.
-
-!!! tip "Summary"
-    ```python
-    import kdomainbench as kdb
-
-    # 1. the methods, and which can use a GPU
-    kdb.list_methods()
-    kdb.list_methods(gpu_only=True)
-
-    # 2. the data: DLPFC sample 151507, true k = 7
-    h5ad = "data/D1_151507_4k.h5ad"
-
-    # 3. run a method
-    clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu")
-
-    # 4. score it against the ground truth
-    kdb.evaluate(clusters, h5ad)
-
-    # 5. plot its domains
-    kdb.pl.plot_spatial(clusters, h5ad)
-    ```
-
-## Step 1: Discover methods
+Run the code from the cloned repository folder, in Python or in Jupyter
+([FAQ](faq.md#can-i-use-jupyter)), with the `kdb_py` environment active.
 
 ```python
 import kdomainbench as kdb
 
-kdb.list_methods()
-# ['PRECAST', 'SC.MEB', 'BayesSpace', 'BNPSpace', 'DR.SC', 'iSC.MEB',
-#  'CellCharter', 'DeepST', 'SpaGCN', 'SpatialDE2']
-kdb.list_methods(gpu_only=True)
-# ['CellCharter', 'DeepST', 'SpatialDE2']
-```
+# 1. the methods, and which can use a GPU
+kdb.list_methods()                  # ['PRECAST', 'SC.MEB', ..., 'SpaGCN', 'SpatialDE2']
+kdb.list_methods(gpu_only=True)     # ['CellCharter', 'DeepST', 'SpatialDE2']
 
-`kdb.get_method` shows one method's settings:
+# 2. the example data: DLPFC sample 151509, reference k = 7
+h5ad = "data/D3_151509_5k.h5ad"
 
-```python
-m = kdb.get_method("cellcharter")      # names are case-insensitive
-m.language, m.env, m.gpu, m.uses_kmax
-# ('Python', 'py', True, True)
-```
-
-[Discover methods](tutorials/discover.md) has the full table and how each method picks k.
-
-## Step 2: Get the data
-
-The test file comes with the code: `data/D1_151507_4k.h5ad` in the cloned repository
-([Get the data](installation.md#get-the-data)). Run the steps below from the repository folder. It
-is DLPFC sample 151507: 4 220 spots, 9 948 genes, and 7 annotated layers as the ground truth.
-
-```python
-h5ad = "data/D1_151507_4k.h5ad"
-kdb.ground_truth(h5ad).value_counts()
-# Layer3    1215
-# Layer1     817
-# Layer5     674
-# Layer6     486
-# Layer4     369
-# WM         354
-# Layer2     305
-```
-
-For your own data, see [Inputs](tutorials/run.md#inputs).
-
-## Step 3: Run a method
-
-`kdb.run` starts the method in its environment and returns one domain label per spot.
-
-```python
+# 3. run a method
 clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu")
-clusters.head(3)
-#                    cluster
-# spot_id
-# AAACAACGAATAGTTC-1       2
-# AAACAAGTATCTCCCA-1       0
-# AAACAATCTACTAGCA-1       2
-clusters["cluster"].nunique()     # estimated k
-# 4
-```
+clusters["cluster"].nunique()       # 4, the estimated k
 
-SpaGCN took 7.5 minutes on a CPU here. The run folder `kdb_results/SpaGCN/D1_151507_4k_cpu/` keeps the labels, the
-method's log and `run_info.json` with the run time and peak memory.
-
-??? note "Details"
-    * `device="gpu"` runs CellCharter, DeepST and SpatialDE2 on GPU 0 (`gpu_id=` picks another).
-      The other seven methods have no GPU code: they run on the CPU and warn.
-    * DeepST and SpaGCN choose k by themselves and ignore `kmax`.
-    * A failed method raises `kdb.MethodFailed` with the end of its log.
-
-[Run a method](tutorials/run.md) covers the arguments, the run folder and your own data.
-
-## Step 4: Evaluate the run
-
-```python
+# 4. score it against the reference annotation
 kdb.evaluate(clusters, h5ad)
-# {'k_estimated': 4, 'k_true': 7, 'k_error': -3,
-#  'ARI': 0.4207, 'NMI': 0.5062, 'n_spots': 4220}
+# {'k_estimated': 4, 'k_reference': 7, 'k_error': -3,
+#  'ARI': 0.4487, 'NMI': 0.5694, 'n_spots_scored': 4786}
+
+# 5. plot its domains and save the figure
+ax = kdb.pl.plot_spatial(clusters, h5ad, title="SpaGCN")
+ax.figure.savefig("spagcn.png", dpi=150, bbox_inches="tight")
 ```
 
-SpaGCN found 4 domains where the annotation has 7 (`k_error = -3`). ARI and NMI measure how well
-its domains match the layers, whatever their number.
-
-[Evaluate a run](tutorials/evaluate.md) explains the scores and how to compare many runs.
-
-## Step 5: Plot
-
-```python
-kdb.pl.plot_spatial(clusters, h5ad, title="SpaGCN")
-```
-
-After several runs, collect them into one table and plot the estimated k of every method:
-
-```python
-summary = kdb.load_results("kdb_results")
-kdb.pl.plot_k_estimates(summary)       # one dot per run, the true k dashed
-```
-
-[Benchmark the ten methods](tutorials/benchmark.md) draws every figure for all ten methods.
+1. [Discover methods](tutorials/discover.md) covers the method table and how each method picks k.
+2. [Run a method](tutorials/run.md) covers the arguments, the run folder, the input file and
+   the GPU.
+3. [Evaluate a run](tutorials/evaluate.md) covers what each score measures and how to compare
+   many runs.
 
 ## Command line
 
@@ -154,12 +49,58 @@ The same steps without Python:
 
 ```bash title="terminal"
 kdomainbench methods
-kdomainbench run -m SpaGCN -i data/D1_151507_4k.h5ad -k 30 -d cpu
+kdomainbench run -m SpaGCN -i data/D3_151509_5k.h5ad -k 30 -d cpu
 kdomainbench summarize --csv summary.csv --plot k.png
 ```
 
 ## Next steps
 
-* Run every method and compare their k: [Benchmark the ten methods](tutorials/benchmark.md).
-* Bring your own Visium sample: [Your own data](tutorials/run.md#your-own-data).
-* Every function and its parameters: [API reference](api.md).
+* [Benchmark the ten methods](tutorials/benchmark.md): every method on sample 151509,
+  with the table and the figures.
+* [Your own data](how-to/own_data.md): from a Space Ranger folder to domains on the tissue.
+* [API reference](api.md): every function and its parameters.
+
+## Key terms
+
+`.h5ad` file
+:   The file format of AnnData, which scanpy uses: the counts of one sample, with `obs` (one
+    row per spot), `var` (one row per gene) and `obsm["spatial"]` (the spot coordinates).
+
+spot
+:   One Visium capture spot: a row of the `.h5ad` file.
+
+spatial domain
+:   A group of spots with similar expression that also lie together, such as a cortical layer.
+
+k
+:   The number of spatial domains. The *estimated k* is the number of distinct labels a
+    method returns.
+
+reference annotation
+:   The manual domain label of each spot, in `obs["clusters"]`. Its number of domains is
+    the *reference domain number*, or reference k.
+
+k error
+:   Estimated k minus reference k. Negative means fewer domains than the annotation.
+
+ARI, NMI
+:   Two scores of how well a method's domains agree with the annotated ones. 1 is full
+    agreement.
+
+`kmax`
+:   The largest k a method may consider, 30 by default. Most methods try k = 2 … `kmax`
+    and pick one.
+
+device
+:   `"cpu"` or `"gpu"`. Only CellCharter, DeepST and SpatialDE2 can use a GPU.
+
+conda environment
+:   A folder with its own Python and packages. kDomainBench uses two, `kdb_py` and
+    `kdb_spatialde` ([Installation](installation.md#step-2-create-the-environments)).
+
+run folder
+:   The folder one run writes: `cluster_results.csv`, `run.log`, `packages.txt` and
+    `run_info.json` ([The run folder](tutorials/run.md#the-run-folder)).
+
+summary table
+:   One row per run, from `kdb.load_results`, with the method, the estimated k and the scores.

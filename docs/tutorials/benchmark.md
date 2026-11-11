@@ -1,12 +1,13 @@
 # Benchmark the ten methods
 
-This tutorial runs all ten methods on DLPFC sample 151507 and asks how close each one gets to
-the true number of domains. Every number and figure on this page comes from that run.
+This tutorial runs all ten methods on sample 151509 and asks how close each one gets to the
+reference domain number (reference k). The table and figures below show the runs of the paper's
+benchmark on this sample, one per method.
 
 !!! tip "Summary"
     ```python
     import kdomainbench as kdb
-    h5ad = "data/D1_151507_4k.h5ad"                    # 4 220 spots, true k = 7
+    h5ad = "data/D3_151509_5k.h5ad"
 
     results = kdb.run_all(h5ad, kmax=30, device="cpu", out_root="bench/")
     summary = kdb.load_results("bench/")
@@ -17,18 +18,18 @@ the true number of domains. Every number and figure on this page comes from that
 
 ## 1. The data
 
-`D1_151507_4k.h5ad` is DLPFC Visium sample 151507 ([Get the data](../installation.md#get-the-data)).
-Its 4 220 spots carry the manual layer annotation, Layer1–Layer6 and white matter: **k = 7**.
+`D3_151509_5k.h5ad` is sample 151509 ([Example data](../installation.md#example-data)).
+Its reference annotation has 7 domains, six cortical layers and white matter: **k = 7**.
 
 ```python
 import kdomainbench as kdb
 
-h5ad = "data/D1_151507_4k.h5ad"
-truth = kdb.ground_truth(h5ad).rename("cluster").to_frame()
-kdb.pl.plot_spatial(truth, h5ad, title="ground truth")
+h5ad = "data/D3_151509_5k.h5ad"
+reference = kdb.reference_annotation(h5ad).to_frame("cluster")
+kdb.pl.plot_spatial(reference, h5ad, title="Reference annotation (k = 7)", legend=True)
 ```
 
-![Ground truth](../assets/ground_truth.png){ width="320" }
+![Reference annotation of sample 151509: six cortical layers and white matter](../assets/reference_annotation.png){ width="400" }
 
 ## 2. Run every method
 
@@ -36,9 +37,8 @@ kdb.pl.plot_spatial(truth, h5ad, title="ground truth")
 results = kdb.run_all(h5ad, kmax=30, device="cpu", out_root="bench/")
 ```
 
-All ten ran with `kmax = 30` and the benchmark's settings
-([How kDomainBench works](../methods.md#the-ten-methods)). Together they took about 6 hours on
-a CPU; [Run a method](run.md) shows how to run them one at a time or on a GPU.
+All ten ran with `kmax = 30` and otherwise as their
+[method scripts](../overview.md#method-scripts) set them.
 
 ## 3. Estimated k and accuracy
 
@@ -48,20 +48,21 @@ summary = kdb.load_results("bench/")
 
 --8<-- "results_table.md"
 
-*k error* = estimated k − true k. ARI and NMI compare the domains with the annotated layers
-([Evaluate a run](evaluate.md#what-each-score-measures)). *Wall time* covers the whole
-run, data loading included; *peak RAM* is host memory only. The raw numbers are in
-[`summary_4k.csv`](../assets/summary_4k.csv).
+The methods are sorted by the size of their *k error* (estimated k − reference k), then by
+ARI. ARI and NMI compare the domains with the annotated ones
+([Evaluate a run](evaluate.md#what-each-score-measures)). The raw numbers are in
+[`summary_5k.csv`](../assets/summary_5k.csv).
 
-![Estimated k per method](../assets/k_estimates.png)
+![Estimated k of each method on sample 151509, with the reference k of 7 as a dashed line](../assets/k_estimates.png){ width="620" }
 
-* **DR.SC** found exactly 7 domains, and **SC.MEB** 9.
-* **CellCharter, DeepST and SpaGCN** found 4, fewer than the 7 layers. DeepST still has the
-  highest ARI (0.55): its 4 domains follow the layer boundaries well.
-* **SpatialDE2** split the tissue into 10 domains, but only 4 of them are large: the other 6 have
-  38 spots or fewer.
-* **PRECAST, iSC.MEB and BayesSpace** found 2–3 domains, and **BNPSpace** put every spot in one
-  cluster (k = 1, ARI 0).
+Blue dots are below the reference k and red ones above. A dot on it would be green.
+
+* No method returned the reference k of 7. **PRECAST** came closest, with 5 domains.
+* **BayesSpace, DeepST and SpaGCN** returned 4. DeepST has the highest ARI (0.54).
+* **SC.MEB and SpatialDE2** returned 10. Five of SpatialDE2's domains have 7 spots or fewer.
+* **DR.SC** returned 15 domains, the largest k error.
+* **BNPSpace and CellCharter** returned 2 domains and **iSC.MEB** 3. BNPSpace put 4,610 of the
+  4,786 spots in one domain (ARI 0.05).
 
 ## 4. The domains on the tissue
 
@@ -69,33 +70,53 @@ run, data loading included; *peak RAM* is host memory only. The raw numbers are 
 fig = kdb.pl.plot_spatial_grid(results, h5ad, ncols=5)
 ```
 
-![Spatial domains of the ten methods](../assets/spatial_domains.png)
+![Spatial domains of the ten methods on sample 151509](../assets/spatial_domains.png)
 
-Compare each map with the ground truth above: a method with too few domains merges layers into
-broad bands, one with too many splits layers into patches. Colors follow the sorted label
-names, so the same color in two maps does not mean the same domain.
+Compare each map with the reference annotation above. A method with fewer domains merges
+layers into broad bands, and one with more splits layers into patches. Colors follow the sorted
+label names, so the same color in two maps does not mean the same domain.
 
-## 5. Cost
+## 5. The twelve metrics
 
-```python
-kdb.pl.plot_runtime(summary)
+`kdomainbench metrics` scores every run with the twelve metrics of the paper, and
+`kdb.pl.plot_metrics` draws them:
+
+```bash title="terminal"
+kdomainbench metrics bench/
 ```
 
-![Run time per method](../assets/runtime.png)
+```python
+summary = kdb.load_results("bench/")      # read again, now with the metrics
+kdb.pl.plot_metrics(summary)
+```
 
-iSC.MEB, SpaGCN and DR.SC finished in under 10 minutes, and CellCharter and SC.MEB in 15–18.
-BNPSpace, BayesSpace, DeepST, SpatialDE2 and PRECAST took 40–75 minutes each. BayesSpace needed
-the most memory (12.0 GB).
+![The twelve metrics of the ten methods on sample 151509 as a matrix of bars](../assets/metrics.png)
 
-!!! note "One dataset, one run"
-    These numbers come from **one** dataset with one seed per method, on a shared 32-core
-    workstation where other jobs were running, so the times are rough. They show that the
-    pipeline works end to end; use more datasets and repeated runs before ranking the methods.
+A darker bar is a better rank among the ten methods
+([Evaluate a run](evaluate.md#plot-the-metrics) explains the figure).
+
+* **DeepST** ranks first in five of the six concordance metrics.
+* **SC.MEB and DR.SC**, with 10 and 15 domains, rank first and second in purity, homogeneity
+  and SCS, and among the last three in completeness, LISI, PAS and CHAOS.
+* **BNPSpace**, which put nearly every spot in one domain, ranks last in seven metrics and
+  first in completeness, LISI, PAS and CHAOS.
+
+!!! note "One sample, one run"
+    This page shows that the pipeline works end to end. One sample with one seed per method
+    does not rank the methods. The runs shown are those of the paper's benchmark, where
+    CellCharter and DeepST ran on a GPU. A run of yours can differ. On sample 151507, CPU runs
+    through this package gave another k for CellCharter and DeepST (4 for both, against 3 and
+    5) and other domains with the same k for BayesSpace, SC.MEB and SpaGCN (BayesSpace: ARI
+    0.35 against 0.28). The other five methods scored the same. The paper's runs used another
+    software environment, described in the paper, and the cause of the BayesSpace and SpaGCN
+    differences was not isolated.
 
 ## Reproduce
 
 ```bash title="terminal"
-kdomainbench run -m all -i data/D1_151507_4k.h5ad -k 30 -d cpu -o bench/
+kdomainbench run -m all -i data/D3_151509_5k.h5ad -k 30 -d cpu -o bench/
 kdomainbench summarize bench/ --csv summary.csv --plot k.png
-python scripts/make_results_page.py bench/ data/D1_151507_4k.h5ad    # this page's table and figures
+python scripts/make_results_page.py bench/ data/D3_151509_5k.h5ad    # this page's table and figures
 ```
+
+The first command runs the methods one after another.

@@ -9,8 +9,8 @@
   function wireSearchClear() {
     var toggle = document.querySelector('#__search');
     var input = document.querySelector('.md-search__input');
-    if (!toggle || !input || toggle.dataset.mtoSearchClear) return;
-    toggle.dataset.mtoSearchClear = '1';
+    if (!toggle || !input || toggle.dataset.searchClearWired) return;
+    toggle.dataset.searchClearWired = '1';
     toggle.addEventListener('change', function () {
       if (!toggle.checked) {
         input.value = '';

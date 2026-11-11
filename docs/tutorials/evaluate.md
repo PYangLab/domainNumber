@@ -1,55 +1,63 @@
 # Evaluate a run
 
-A run gives one domain label per spot. `kdb.evaluate` compares them with the ground truth: how far
-the estimated k is from the true k, and how well the domains match the annotated ones.
+A run gives one domain label per spot. `kdb.evaluate` compares them with the reference
+annotation: how far the estimated k is from the reference k, and how well the domains agree
+with the annotated ones. The examples score the runs of [Run a method](run.md), and the input
+file needs a reference annotation in `obs["clusters"]`. The outputs shown are those of the
+paper's benchmark runs on sample 151509.
 
 !!! tip "Summary"
     ```python
     import kdomainbench as kdb
-    h5ad = "data/D1_151507_4k.h5ad"
+    h5ad = "data/D3_151509_5k.h5ad"
 
-    clusters = kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")  # or what kdb.run returns
-    kdb.evaluate(clusters, h5ad)                  # one run
+    clusters = kdb.read_clusters("kdb_results/SpaGCN/D3_151509_5k_cpu")  # or what kdb.run returns
+    kdb.evaluate(clusters, h5ad)                  # one run: k error, ARI, NMI
     summary = kdb.load_results("kdb_results")     # every run under kdb_results/, scored
     kdb.k_accuracy(summary)                       # one row per method
+    kdb.metrics("kdb_results/DR.SC/D3_151509_5k_cpu")    # the twelve metrics of the paper
+    kdb.pl.plot_metrics(kdb.load_results("kdb_results")) # the metrics as a figure
     ```
 
 ## Score one run
 
 ```python
-clusters = kdb.read_clusters("kdb_results/SpaGCN/D1_151507_4k_cpu")
+clusters = kdb.read_clusters("kdb_results/SpaGCN/D3_151509_5k_cpu")
 kdb.evaluate(clusters, h5ad)
-# {'k_estimated': 4, 'k_true': 7, 'k_error': -3,
-#  'ARI': 0.4207, 'NMI': 0.5062, 'n_spots': 4220}
+# {'k_estimated': 4, 'k_reference': 7, 'k_error': -3,
+#  'ARI': 0.4487, 'NMI': 0.5694, 'n_spots_scored': 4786}
 ```
 
-The second argument is the `.h5ad` file, whose `obs["clusters"]` holds the ground truth, or the
-labels themselves as a Series indexed by spot:
+The second argument is the `.h5ad` file, whose `obs["clusters"]` holds the reference annotation,
+or the annotation itself as a Series indexed by spot. Another run in its place compares two
+methods ([Your own data](../how-to/own_data.md#the-methods-will-disagree)):
 
 ```python
-truth = kdb.ground_truth(h5ad)                       # obs["clusters"], NaN spots dropped
-truth = kdb.ground_truth(h5ad, key="layer_guess")    # another column
-kdb.evaluate(clusters, truth)
+reference = kdb.reference_annotation(h5ad)                       # obs["clusters"], spots without a label dropped
+reference = kdb.reference_annotation(h5ad, reference_key="layer_guess")    # another column
+kdb.evaluate(clusters, reference)
 ```
 
 ## What each score measures
 
 | Score | Meaning | Best |
 |---|---|---|
-| `k_estimated` | number of distinct labels the method returned | — |
-| `k_true` | number of distinct ground-truth labels | — |
-| `k_error` | `k_estimated − k_true`; negative means too few domains | 0 |
-| `ARI` | adjusted Rand index between the labels and the ground truth | 1 |
-| `NMI` | normalized mutual information between the labels and the ground truth | 1 |
-| `n_spots` | spots scored: those with both a label and a ground-truth label | — |
+| `k_estimated` | number of distinct labels the method returned | |
+| `k_reference` | number of distinct labels in the reference annotation | |
+| `k_error` | `k_estimated − k_reference`. Negative means fewer domains than the annotation | 0 |
+| `ARI` | adjusted Rand index between the labels and the annotation | 1 |
+| `NMI` | normalized mutual information between the labels and the annotation, with the arithmetic mean of the two entropies as the norm | 1 |
+| `n_spots_scored` | spots that have both a label and an annotation. ARI and NMI use these | |
 
-??? note "Details"
-    * `k_error` is the main score of the benchmark: the question is how many domains there are.
-      ARI and NMI tell whether the domains found are the right ones.
-    * A method can get k right with poor domains, or k wrong with good ones. On the 4k sample,
-      DR.SC found k = 7 with ARI 0.47, while DeepST found k = 4 with a higher ARI, 0.55.
-    * ARI and NMI do not depend on the label names: `0, 1, 2` and `Layer1, Layer2, Layer3` are
+??? note "How to read k error, ARI and NMI"
+    * `k_error` is the main score of the benchmark, which asks how many domains there are.
+      ARI and NMI tell how well the domains found agree with the annotated ones.
+    * The two can disagree. On sample 151509 the method closest to the reference k has the
+      third-lowest ARI ([Benchmark the ten methods](benchmark.md#3-estimated-k-and-accuracy)).
+    * ARI and NMI do not depend on the label names. `0, 1, 2` and `Layer1, Layer2, Layer3` are
       compared by grouping only.
+    * Labels and annotation are matched by spot barcode. `kdb.evaluate` raises a `ValueError`
+      when they share no spot or when a barcode occurs twice.
 
 ## Score many runs
 
@@ -58,53 +66,158 @@ against its own `.h5ad` file. The result has one row per run:
 
 ```python
 summary = kdb.load_results("kdb_results")
-summary[["method", "device_used", "k_estimated", "k_true", "k_error",
-         "ARI", "NMI", "wall_time_s", "peak_rss_mb"]]
-#         method device_used  k_estimated  k_true  k_error     ARI     NMI  wall_time_s  peak_rss_mb
-# 0     BNPSpace         cpu            1       7       -6  0.0000  0.0000      2508.43       5303.4
-# 1   BayesSpace         cpu            3       7       -4  0.3533  0.5648      3209.30      12029.7
-# 2  CellCharter         cpu            4       7       -3  0.4901  0.6490       978.14       2068.9
+summary[["method", "k_estimated", "k_reference", "k_error", "ARI", "NMI"]]
+#         method  k_estimated  k_reference  k_error     ARI     NMI
+# 0     BNPSpace            2            7       -5  0.0480  0.1604
+# 1   BayesSpace            4            7       -3  0.3745  0.5776
+# 2  CellCharter            2            7       -5  0.3657  0.4609
 # ...
 ```
 
-`kdb.k_accuracy` sums it up per method, best first (smallest k error, then highest ARI):
+`kdb.k_accuracy` gives one row per method, the smallest k error first, then the highest ARI:
 
 ```python
 kdb.k_accuracy(summary)
-#         runs  mean_abs_k_error  exact_rate  mean_ARI
+#          runs  mean_abs_k_error  exact_rate  mean_ARI
 # method
-# DR.SC      1               0.0         1.0    0.4691
-# SC.MEB     1               2.0         0.0    0.4077
-# DeepST     1               3.0         0.0    0.5516
+# PRECAST     1               2.0         0.0    0.2615
+# DeepST      1               3.0         0.0    0.5416
+# SpaGCN      1               3.0         0.0    0.4487
 # ...
 ```
 
 | Column | Meaning |
 |---|---|
-| `runs` | successful runs with a ground truth |
+| `runs` | successful runs with a reference annotation |
 | `mean_abs_k_error` | mean of \|k_error\| over the runs |
-| `exact_rate` | fraction of runs with exactly the true k |
+| `exact_rate` | fraction of runs with exactly the reference k |
 | `mean_ARI` | mean ARI over the runs |
 
-Both tables for all ten methods, with what they show, are in
+Both tables for all ten methods are in
 [Benchmark the ten methods](benchmark.md#3-estimated-k-and-accuracy).
 
-??? note "Details"
-    * Failed runs stay in `summary` with `success = False`; `k_accuracy` leaves them out.
-    * `load_results(root, truth_key="layer_guess")` scores against another `obs` column;
+??? note "Failed runs, other datasets, other machines"
+    * Failed runs stay in `summary` with `success = False`, and `k_accuracy` leaves them out.
+    * `k_accuracy` averages over every run of a method in `summary`. With several datasets or
+      devices in one folder, filter first, for example `summary[summary["dataset"] == "D3_151509_5k"]`.
+    * A file without an annotation is not scored. Its runs keep `k_estimated`, and
+      `score_error` says why ([Your own data](../how-to/own_data.md#3-read-the-result)).
+    * Runs made on another machine record the input file's path there.
+      `load_results(root, h5ad="data/D3_151509_5k.h5ad")` scores them against your copy. For
+      runs of several datasets, name a file for each: `h5ad={"D3_151509_5k": "data/D3_151509_5k.h5ad", ...}`.
+    * `load_results(root, reference_key="layer_guess")` scores against another `obs` column, and
       `score=False` skips scoring and only collects the run records.
     * `kdomainbench summarize --csv summary.csv` prints both tables from the command line.
 
+## The twelve metrics of the paper
+
+`kdb.evaluate` scores a run in Python. `kdb.metrics` computes the twelve metrics of the paper
+with the paper's own code, so it needs the metric R packages
+([Installation](../installation.md#the-metric-packages)) and `kdb_py`. Every spot needs a label
+from the run and an annotation in `obs["clusters"]`, and the annotation needs at least two
+domains.
+
+```python
+kdb.metrics("kdb_results/DR.SC/D3_151509_5k_cpu").round(4)
+# metric
+# ARI         0.2333
+# spARI       0.2110
+# NMI         0.4826
+# FM          0.3780
+# AMI         0.3980
+# Purity      0.7048
+# HOM         0.6078
+# COM         0.4001
+# PAS         0.1331
+# CHAOS       0.0610
+# LISI        1.4928
+# SCS       380.8270
+```
+
+The result is saved as `metric.csv` in the run
+folder. A later call reads it back, and `kdb.load_results` then adds the ten other metrics as columns. From the shell, `kdomainbench metrics kdb_results/` computes them for every finished
+run that has none yet.
+
+| Metric | What it measures | Better | Computed with |
+|---|---|---|---|
+| `ARI` | adjusted Rand index between the labels and the annotation | higher | clevr |
+| `spARI` | an ARI that also weighs how far apart the disagreeing spots lie | higher | spARI |
+| `NMI` | normalized mutual information, with the arithmetic mean of the two entropies as the norm | higher | aricode |
+| `FM` | Fowlkes–Mallows index | higher | clevr |
+| `AMI` | adjusted mutual information | higher | aricode |
+| `Purity` | share of spots in the most common annotated domain of their label | higher | ClusterR |
+| `HOM` | homogeneity: each label holds spots of one annotated domain | higher | clevr |
+| `COM` | completeness: each annotated domain falls under one label | higher | clevr |
+| `PAS` | share of spots with another label than most of their 10 nearest spots | lower | SpatialPCA |
+| `CHAOS` | mean distance from a spot to the nearest spot with the same label | lower | SpatialPCA |
+| `LISI` | median local inverse Simpson index of the labels around a spot. 1 means one label | lower | lisi |
+| `SCS` | spatial coherence score: how far the label pairs of neighboring spots are from 1,000 random shuffles, as an absolute Z-score | higher | PASTE's code |
+
+!!! warning "SCS and large samples"
+    SCS keeps two tables of all spot pairs in memory, so its memory grows with the square of
+    the number of spots. For the 4,786 spots here it peaked at 0.7 GB. For 50,000 spots the
+    two tables alone take 40 GB. SCS also differs between computers (see below).
+
+The first eight compare the labels with the reference annotation. The last four use only the
+labels and the spot coordinates. [Citation](../citation.md#the-metrics) lists the publications
+behind spARI and the last four.
+
+### Plot the metrics
+
+`kdb.pl.plot_metrics` draws the metrics of every run in a summary table, laid out as Fig. 2f of
+the paper:
+
+```python
+summary = kdb.load_results("kdb_results")     # read again, now with the metrics
+ax = kdb.pl.plot_metrics(summary)
+ax.figure.savefig("metrics.png", dpi=150, bbox_inches="tight")
+```
+
+![The twelve metrics of the ten methods on sample 151509 as a matrix of bars](../assets/metrics.png)
+
+* **Rows and columns.** One row per method and one column per metric. The paper sorts the
+  metrics into four groups: concordance with the annotation, completeness, spatial coherence
+  and stability.
+* **Bar.** The value of the metric, on the axis below its column. The left tick of an axis is 0,
+  and a negative value is drawn to the left of it.
+* **Fill.** The rank of the method among the methods for that metric. The darkest bar is the
+  best one, which is the lowest value where the arrow points down (LISI, PAS and CHAOS).
+* **`n/a`.** No value, such as the SCS of a run with one domain. This figure has none.
+
+The figure shows the ten runs of
+[Benchmark the ten methods](benchmark.md#3-estimated-k-and-accuracy), scored on the computer
+that made this page. A method whose runs have no `metric.csv` has only its ARI and NMI bars,
+and with several runs per method a bar is their mean and a whisker their standard deviation.
+
+??? note "Where the code comes from, and why SCS differs between computers"
+    * The code is `metrics.R` and `scs.py` in `src/kdomainbench/metric_scripts/`, unchanged
+      copies of the scripts that scored the paper's benchmark. A test fails when either file
+      changes.
+    * The file also needs `obs["pixel_row"]`, `obs["pixel_col"]` and `obsm["spatial"]`.
+      `metrics.R` reads the barcodes as numbers when they look like numbers, and then finds no
+      match. Visium barcodes such as `AAACAAGTATCTCCCA-1` are not affected.
+    * For the DR.SC run above, eleven metrics equal the paper's values to 12 digits. SCS does
+      not: it was 380.8 on the computer that made this page and 365.1 in the paper's results.
+      PASTE's code links each spot to its 4 nearest spots, and on a Visium grid many spots have
+      more than 4 equally near ones (8% of the spots of sample 151509 tie for the fourth).
+      Which of them are kept is left to the sorting routine, so SCS can differ between
+      computers. Compare SCS only between runs scored on the same computer.
+    * SCS runs in `kdb_py` because PASTE's code needs pandas below 3. With pandas 3 it returns
+      no value, which `kdb.metrics` reports as an error.
+    * A run with one domain has no SCS, because every shuffle of one label is the same
+      labeling. The paper's results leave it empty too.
+    * A failed call raises `kdb.MetricsFailed`. The output of the metric code is in
+      `metric.log` in the run folder.
+    * `metric.csv` is read back as it is. After the annotation changes, call
+      `kdb.metrics(run, recompute=True)`.
+
 ## Are the numbers comparable?
 
-* **Run time and memory** depend on the machine and on what else runs on it. Compare them only
-  between runs on the same machine, ideally run one at a time.
 * **One run per method** does not show how much a method varies. Several methods are stochastic
-  (MCMC, neural-network training); repeat runs, or several datasets, before ranking them.
-  The scripts fix their random seeds where the method allows it. SC.MEB, run in parallel as in
-  the original script, found k = 7 in one run and k = 9 in another, so kDomainBench runs it
-  serially ([Method scripts](../methods.md#method-scripts)).
+  (MCMC, neural-network training), so a second run can differ
+  ([Will I get the same result twice?](../faq.md#will-i-get-the-same-result-twice)). Use several
+  datasets before ranking methods.
 * **`kmax`** changes the answer of the eight methods that use it. Keep it the same across methods
   (the benchmark uses 30).
 
-Next: [Benchmark the ten methods](benchmark.md) runs them all and compares their k.
+Next: [Benchmark the ten methods](benchmark.md).
