@@ -4,8 +4,6 @@ site_description: Benchmarking methods that estimate the number of spatial domai
 repo_name: GitHub
 repo_url: https://github.com/liuchunlei0430/kDomainBench
 edit_uri: ""
-docs_dir: docs
-site_dir: site
 exclude_docs: requirements.txt      # the site's own build requirements are not a page
 
 validation:
@@ -26,7 +24,6 @@ theme:
     - toc.follow
     - search.highlight
     - content.code.copy
-    - content.code.select
     - header.autohide
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -71,7 +68,6 @@ markdown_extensions:
   - admonition
   - def_list
   - pymdownx.highlight: {anchor_linenums: true}
-  - pymdownx.inlinehilite
   - attr_list
   - md_in_html
   - tables

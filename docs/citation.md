@@ -47,5 +47,4 @@ expression in the human dorsolateral prefrontal cortex. *Nature Neuroscience* 24
 To make a result reproducible, report the package version and commit, `kmax` and the device.
 The run folder records the rest: `run_info.json` holds the exact call of the method script
 (`command`) and the settings that change a method (`env`), and `packages.txt` the package
-versions of its environment. These matter most for the R methods, since your R is not pinned
-([Installation](installation.md#r)).
+versions of its environment.

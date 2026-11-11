@@ -19,7 +19,7 @@ METHODS_DIR = Path(__file__).resolve().parent / "methods"
 # against the method scripts).
 RECORDED_ENV = ("KDB_METHODS_DIR", "CUDA_VISIBLE_DEVICES", "CUDA_DEVICE_ORDER", "R_LIBS", "PRECAST_CORES",
                 "SCMEB_PARALLEL", "SCMEB_CORES")
-# PRECAST and iSC.MEB recurse deeply in C++ and need an unlimited stack
+# The methods with big_stack recurse deeply in C++ and need an unlimited stack
 _BIG_STACK = ('ulimit -s unlimited 2>/dev/null || echo "[kdomainbench] could not raise the stack limit '
               '(ulimit -s: $(ulimit -s)); the method may stop with a stack error"; exec "$@"')
 
@@ -51,7 +51,7 @@ def _build_env(method, device, gpu_id):
 def _check(method, h5ad, kmax, device):
     """Raise, before anything runs, when ``method`` (a Method record) cannot run with these settings."""
     if device not in ("cpu", "gpu"):
-        raise ValueError("device must be 'cpu' or 'gpu'")
+        raise ValueError(f"device must be 'cpu' or 'gpu', not {device!r}")
     if method.uses_kmax and kmax < 2:
         raise ValueError("kmax must be at least 2")
     if method.kmax_limit and kmax > method.kmax_limit:
@@ -93,7 +93,10 @@ def run(method, h5ad, kmax=30, device="cpu", out_root="kdb_results", gpu_id=None
     method : str
         Method name, case-insensitive, from [list_methods][kdomainbench.list_methods].
     h5ad : str or path
-        Input file: raw counts in ``X`` and the spatial fields the method reads.
+        Input ``.h5ad`` file with raw counts in ``X``. The R methods read ``obs["array_row"]``
+        and ``obs["array_col"]``, SpaGCN ``obs["pixel_row"]`` and ``obs["pixel_col"]``, and
+        CellCharter, DeepST and SpatialDE2 ``obsm["spatial"]``. An AnnData object in memory is
+        not accepted: save it with ``adata.write_h5ad(...)`` first.
     kmax : int
         Largest number of domains the method may consider, at least 2. DeepST and SpaGCN
         ignore it. BNPSpace starts from it and accepts at most 30.
@@ -112,7 +115,8 @@ def run(method, h5ad, kmax=30, device="cpu", out_root="kdb_results", gpu_id=None
     Returns
     -------
     pandas.DataFrame
-        One row per spot, indexed by ``spot_id``, with the domain label in ``cluster``.
+        One row per spot, indexed by ``spot_id``, with the domain label (as a string) in
+        ``cluster``.
 
     Raises
     ------
@@ -177,7 +181,7 @@ def run(method, h5ad, kmax=30, device="cpu", out_root="kdb_results", gpu_id=None
     if m.gpu:
         cmd += ["--device", used]
     if m.big_stack:
-        cmd = ["bash", "-c", _BIG_STACK, "bash", *cmd]
+        cmd = ["bash", "-c", _BIG_STACK, "bash", *cmd]      # the second "bash" is $0, the rest is "$@"
     env = _build_env(m, used, gpu_id)
     gpus = env["CUDA_VISIBLE_DEVICES"] if used == "gpu" else None
 
@@ -200,7 +204,8 @@ def run(method, h5ad, kmax=30, device="cpu", out_root="kdb_results", gpu_id=None
     def _terminate(signum, frame):          # scancel, a time limit, a closed terminal: stop the method too
         raise SystemExit(128 + signum)
     stops = ()
-    if threading.current_thread() is threading.main_thread():      # a signal the caller ignores (nohup) stays ignored
+    if threading.current_thread() is threading.main_thread():      # signal.signal works only there
+        # a signal the caller ignores (nohup) stays ignored
         stops = tuple(s for s in (signal.SIGTERM, signal.SIGHUP) if signal.getsignal(s) is not signal.SIG_IGN)
     previous = [signal.signal(sig, _terminate) for sig in stops]
     try:
@@ -214,6 +219,8 @@ def run(method, h5ad, kmax=30, device="cpu", out_root="kdb_results", gpu_id=None
                         sys.stdout.write(line)
                         sys.stdout.flush()
                 proc.stdout.close()
+                # os.wait4, not proc.wait(): it also returns the peak memory (rusage). It collects the
+                # process itself, so Popen is told the return code by hand.
                 _, status, rusage = os.wait4(proc.pid, 0)
                 proc.returncode = os.waitstatus_to_exitcode(status)
             except BaseException:
@@ -258,9 +265,10 @@ def run_all(h5ad, kmax=30, device="cpu", methods=None, out_root="kdb_results", g
     Parameters
     ----------
     h5ad : str or path
-        Input file.
+        Input file, see [run][kdomainbench.run].
     kmax : int
-        Largest number of domains the methods may consider.
+        Largest number of domains the methods may consider. BNPSpace accepts at most 30: for a
+        larger ``kmax``, leave it out with ``methods=``.
     device : str
         ``"cpu"`` or ``"gpu"``, see [run][kdomainbench.run].
     methods : str or list of str, optional
@@ -304,11 +312,11 @@ def run_all(h5ad, kmax=30, device="cpu", methods=None, out_root="kdb_results", g
     todo = [get_method(name) for name in (list_methods() if methods is None else methods)]
     for m in todo:                              # before the first method starts, not hours later
         _check(m, h5ad, kmax, device)
-    out, problems = {}, []
+    results, problems = {}, []
     for m in todo:
         try:
-            out[m.name] = run(m.name, h5ad, kmax=kmax, device=device, out_root=out_root, gpu_id=gpu_id,
-                              verbose=verbose)
+            results[m.name] = run(m.name, h5ad, kmax=kmax, device=device, out_root=out_root, gpu_id=gpu_id,
+                                  verbose=verbose)
         except MethodFailed as e:
             print(f"[kdomainbench] {e}")
             problems.append(f"{m.name} failed, see {e.log}")
@@ -319,4 +327,4 @@ def run_all(h5ad, kmax=30, device="cpu", methods=None, out_root="kdb_results", g
         sys.stdout.flush()                      # the warning (stderr) after the methods' output, also in a log file
         warnings.warn(f"{len(problems)} of {len(todo)} methods did not finish:\n  " + "\n  ".join(problems),
                       stacklevel=2)
-    return out
+    return results

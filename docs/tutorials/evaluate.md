@@ -29,14 +29,16 @@ kdb.evaluate(clusters, h5ad)
 ```
 
 The second argument is the `.h5ad` file, whose `obs["clusters"]` holds the reference annotation,
-or the annotation itself as a Series indexed by spot. Another run in its place compares two
-methods ([Your own data](../how-to/own_data.md#the-methods-will-disagree)):
+or the annotation itself as a Series indexed by spot:
 
 ```python
 reference = kdb.reference_annotation(h5ad)                       # obs["clusters"], spots without a label dropped
 reference = kdb.reference_annotation(h5ad, reference_key="layer_guess")    # another column
 kdb.evaluate(clusters, reference)
 ```
+
+Another run in its place compares two methods
+([Your own data](../how-to/own_data.md#the-methods-will-disagree)).
 
 ## What each score measures
 
@@ -52,12 +54,13 @@ kdb.evaluate(clusters, reference)
 ??? note "How to read k error, ARI and NMI"
     * `k_error` is the main score of the benchmark, which asks how many domains there are.
       ARI and NMI tell how well the domains found agree with the annotated ones.
-    * The two can disagree. On sample 151509 the method closest to the reference k has the
-      third-lowest ARI ([Benchmark the ten methods](benchmark.md#3-estimated-k-and-accuracy)).
+    * The two measure different things: a method can be close to the reference k with a low
+      ARI, and the reverse.
     * ARI and NMI do not depend on the label names. `0, 1, 2` and `Layer1, Layer2, Layer3` are
       compared by grouping only.
     * Labels and annotation are matched by spot barcode. `kdb.evaluate` raises a `ValueError`
-      when they share no spot or when a barcode occurs twice.
+      when they share no spot or when a barcode occurs twice. A partial match is scored without
+      a warning, so check `n_spots_scored`.
 
 ## Score many runs
 
@@ -93,7 +96,7 @@ kdb.k_accuracy(summary)
 | `exact_rate` | fraction of runs with exactly the reference k |
 | `mean_ARI` | mean ARI over the runs |
 
-Both tables for all ten methods are in
+The table for all ten methods is in
 [Benchmark the ten methods](benchmark.md#3-estimated-k-and-accuracy).
 
 ??? note "Failed runs, other datasets, other machines"
@@ -153,11 +156,6 @@ run that has none yet.
 | `LISI` | median local inverse Simpson index of the labels around a spot. 1 means one label | lower | lisi |
 | `SCS` | spatial coherence score: how far the label pairs of neighboring spots are from 1,000 random shuffles, as an absolute Z-score | higher | PASTE's code |
 
-!!! warning "SCS and large samples"
-    SCS keeps two tables of all spot pairs in memory, so its memory grows with the square of
-    the number of spots. For the 4,786 spots here it peaked at 0.7 GB. For 50,000 spots the
-    two tables alone take 40 GB. SCS also differs between computers (see below).
-
 The first eight compare the labels with the reference annotation. The last four use only the
 labels and the spot coordinates. [Citation](../citation.md#the-metrics) lists the publications
 behind spARI and the last four.
@@ -185,23 +183,17 @@ ax.figure.savefig("metrics.png", dpi=150, bbox_inches="tight")
 * **`n/a`.** No value, such as the SCS of a run with one domain. This figure has none.
 
 The figure shows the ten runs of
-[Benchmark the ten methods](benchmark.md#3-estimated-k-and-accuracy), scored on the computer
-that made this page. A method whose runs have no `metric.csv` has only its ARI and NMI bars,
-and with several runs per method a bar is their mean and a whisker their standard deviation.
+[Benchmark the ten methods](benchmark.md#3-estimated-k-and-accuracy). A method whose runs have
+no `metric.csv` has only its ARI and NMI bars, and with several runs per method a bar is their
+mean and a whisker their standard deviation.
 
-??? note "Where the code comes from, and why SCS differs between computers"
+??? note "Where the code comes from"
     * The code is `metrics.R` and `scs.py` in `src/kdomainbench/metric_scripts/`, unchanged
       copies of the scripts that scored the paper's benchmark. A test fails when either file
       changes.
     * The file also needs `obs["pixel_row"]`, `obs["pixel_col"]` and `obsm["spatial"]`.
       `metrics.R` reads the barcodes as numbers when they look like numbers, and then finds no
       match. Visium barcodes such as `AAACAAGTATCTCCCA-1` are not affected.
-    * For the DR.SC run above, eleven metrics equal the paper's values to 12 digits. SCS does
-      not: it was 380.8 on the computer that made this page and 365.1 in the paper's results.
-      PASTE's code links each spot to its 4 nearest spots, and on a Visium grid many spots have
-      more than 4 equally near ones (8% of the spots of sample 151509 tie for the fourth).
-      Which of them are kept is left to the sorting routine, so SCS can differ between
-      computers. Compare SCS only between runs scored on the same computer.
     * SCS runs in `kdb_py` because PASTE's code needs pandas below 3. With pandas 3 it returns
       no value, which `kdb.metrics` reports as an error.
     * A run with one domain has no SCS, because every shuffle of one label is the same
@@ -211,13 +203,9 @@ and with several runs per method a bar is their mean and a whisker their standar
     * `metric.csv` is read back as it is. After the annotation changes, call
       `kdb.metrics(run, recompute=True)`.
 
-## Are the numbers comparable?
+## Comparing methods
 
-* **One run per method** does not show how much a method varies. Several methods are stochastic
-  (MCMC, neural-network training), so a second run can differ
-  ([Will I get the same result twice?](../faq.md#will-i-get-the-same-result-twice)). Use several
-  datasets before ranking methods.
-* **`kmax`** changes the answer of the eight methods that use it. Keep it the same across methods
-  (the benchmark uses 30).
+Use the same `kmax` for every method (the benchmark uses 30), and several datasets before
+ranking methods.
 
 Next: [Benchmark the ten methods](benchmark.md).

@@ -25,7 +25,7 @@ kdb.get_method("DR.SC").uses_kmax        # True
 |---|---|
 | [`kdb.run(method, h5ad, kmax=, device=, out_root=, gpu_id=)`](reference/run.md#kdomainbench.run) | The domain of each spot. The run folder keeps the log and `run_info.json`. |
 | [`kdb.run_all(h5ad, kmax=, device=, methods=, out_root=, gpu_id=)`](reference/run.md#kdomainbench.run_all) | Method name → domains, for every method that succeeded. |
-| [`kdb.MethodFailed`](reference/run.md#kdomainbench.MethodFailed) | Raised by `run` when a method stops with an error. |
+| [`kdb.MethodFailed`](reference/run.md#kdomainbench.MethodFailed) | Raised by `run` when a method stops with an error or writes no labels. |
 
 ```python
 h5ad = "data/D3_151509_5k.h5ad"
@@ -46,7 +46,7 @@ results = kdb.run_all(h5ad, kmax=30, device="gpu", gpu_id=0, out_root="kdb_resul
 | [`kdb.k_accuracy(summary)`](reference/scores.md#kdomainbench.k_accuracy) | One row per method: mean \|k error\|, exact-k rate, mean ARI. |
 
 ```python
-kdb.evaluate(kdb.read_clusters("kdb_results/SpaGCN/D3_151509_5k_cpu"), h5ad)
+kdb.evaluate("kdb_results/SpaGCN/D3_151509_5k_cpu", h5ad)
 summary = kdb.load_results("kdb_results")
 kdb.k_accuracy(summary)
 ```

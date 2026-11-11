@@ -50,7 +50,7 @@ class Method:
     big_stack: bool = False
     kmax_limit: int = None
     reference: str = ""
-    aliases: tuple = field(default_factory=tuple)
+    aliases: tuple = ()
 
 
 _METHODS = [
@@ -87,13 +87,10 @@ _METHODS = [
 ]
 
 METHODS = {m.name: m for m in _METHODS}
-_LOOKUP = {}
-for m in _METHODS:
-    for key in (m.name, *m.aliases):
-        _LOOKUP[key.lower()] = m
+_LOOKUP = {key.lower(): m for m in _METHODS for key in (m.name, *m.aliases)}
 
 
-def get_method(name: str) -> Method:
+def get_method(name):
     """Return one method's settings.
 
     Parameters
@@ -121,10 +118,10 @@ def get_method(name: str) -> Method:
     try:
         return _LOOKUP[name.lower()]
     except KeyError:
-        raise ValueError(f"unknown method {name!r}; choose from {list(METHODS)}") from None
+        raise ValueError(f"unknown method {name!r}. The methods are {', '.join(METHODS)}") from None
 
 
-def list_methods(gpu_only: bool = False) -> list:
+def list_methods(gpu_only=False):
     """Return the names of the methods.
 
     Parameters

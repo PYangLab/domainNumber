@@ -22,10 +22,10 @@ R for the R methods. kDomainBench starts each method in the right one.
     [Run on a cluster](how-to/cluster.md).
 
 !!! note "macOS and Windows"
-    The methods run on Linux only. To score and plot finished runs on another system, a plain
-    Python environment with Python 3.10 or later is enough (tested on macOS), in the cloned
-    folder. The Python that comes with macOS is 3.9 (`python3 --version` shows it), so install
-    Miniforge first, as in Before you start:
+    The methods run on Linux only. Scoring and plotting finished runs works on any system with
+    Python 3.10 or later (tested on macOS). The Python that comes with macOS is 3.9
+    (`python3 --version` shows it), so install Miniforge first, as in Before you start, with
+    `conda init zsh`. Then, in the cloned folder:
 
     ```bash
     python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -e .
@@ -61,7 +61,7 @@ The repository holds the package (`src/kdomainbench/`), one script per method
 
 ## Step 2: Create the environments
 
-Each method runs in one of three environments, so their dependencies never conflict:
+Which method runs where:
 
 | Environment | Methods | Main contents |
 |---|---|---|
@@ -86,7 +86,8 @@ conda run -n kdb_py pip install --no-deps -e .
 ```
 
 `KDB_ENVS_DIR=/project/envs bash envs/install_envs.sh` creates them in that folder instead of
-conda's default one, for example to keep them out of a small home folder.
+conda's default one, for example to keep them out of a small home folder. Activate `kdb_py`
+then by its path: `conda activate /project/envs/kdb_py`.
 
 !!! success "One set of environments for CPU and GPU machines"
     On a GPU machine the environments need only an NVIDIA driver (≥ 525). The GPU libraries
@@ -124,18 +125,11 @@ of each run.
     export KDB_R_LIB=/project/kdb_rlib
     ```
 
-??? note "The R versions behind this site's results"
-    The results on this site were produced with R 4.4.1, Bioconductor 3.19, PRECAST 1.7,
-    DR.SC 3.6, iSC.MEB 1.0, SC.MEB 1.1, BayesSpace 1.14.0, Seurat 5.3.0 and zellkonverter
-    1.14.1. `envs/kdb_r.lock.csv` lists every R package with its version. Unlike the Python
-    environments, your R is not pinned to these versions, so a newer package can give
-    different domains.
-
 ### The metric packages
 
 This step is optional. `kdb.evaluate` scores a run with k error, ARI and NMI and needs nothing
 more. The twelve metrics of the paper ([Evaluate a run](tutorials/evaluate.md#the-twelve-metrics-of-the-paper))
-are computed by the paper's R code, which needs these packages:
+are computed by the paper's own code, whose R part needs these packages:
 
 | Source | Packages |
 |---|---|
@@ -185,8 +179,7 @@ first read downloads the reader that zellkonverter uses, which needs internet ac
 
 An environment that is missing or broken prints `MISSING` or `FAILED` with the reason, and the
 command exits with an error. On a GPU machine, `kdomainbench check --gpu` should report
-`CUDA available: True` and `GPUs: 1`, and fails when no GPU is visible. With `--metrics` it
-also checks the metric packages.
+`CUDA available: True` and `GPUs: 1`, and fails when no GPU is visible.
 
 ## Example data
 
@@ -196,13 +189,16 @@ The tutorials use the DLPFC Visium sample **151509** from the spatialLIBD study
 annotation of six cortical layers (Layer1–Layer6) and white matter (WM). This is the reference
 annotation. It has 7 domains, so the reference domain number is **k = 7**.
 
-The file comes with the code as `data/D3_151509_5k.h5ad` (14 MB). It is the benchmark's copy of
+The file comes with the code as `data/D3_151509_5k.h5ad` (14 MB): `D3` is the number of the
+dataset in the benchmark, and `5k` its rounded number of spots. It is the benchmark's copy of
 the sample, filtered beforehand. It holds 4,786 spots and the 10,486 genes that had at least
 100 UMIs when the file was built (`var["n_counts"]`). The script that built it is not in this
 repository.
 
 ??? note "What the file contains"
     * `X`: raw UMI counts
+    * `obs_names`: the spot barcodes. Most carry a `.1` or `.2` suffix from the benchmark's copy
+      (`AAACAAGTATCTCCCA-1.2`), so they differ from the original Space Ranger barcodes
     * `obs["array_row"]`, `obs["array_col"]`: Visium grid coordinates
     * `obsm["spatial"]`: 2-D spot coordinates
     * `obs["clusters"]`: the annotated domain of each spot (`Layer1` … `Layer6`, `WM`)

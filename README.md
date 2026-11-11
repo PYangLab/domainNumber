@@ -12,7 +12,7 @@ Visium samples, or to compare k-estimation methods. It does not add a method of 
 
 ```python
 import kdomainbench as kdb
-clusters = kdb.run("SpaGCN", "data/D3_151509_5k.h5ad", kmax=30, device="cpu")
+clusters = kdb.run("SpaGCN", "data/D3_151509_5k.h5ad")
 kdb.evaluate(clusters, "data/D3_151509_5k.h5ad")       # k error, ARI and NMI against the annotation
 ```
 

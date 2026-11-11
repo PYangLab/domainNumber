@@ -37,13 +37,15 @@ kdb.pl.plot_spatial(reference, h5ad, title="Reference annotation (k = 7)", legen
 results = kdb.run_all(h5ad, kmax=30, device="cpu", out_root="bench/")
 ```
 
-All ten ran with `kmax = 30` and otherwise as their
+`run_all` runs all ten with `kmax = 30` and otherwise as their
 [method scripts](../overview.md#method-scripts) set them.
 
 ## 3. Estimated k and accuracy
 
 ```python
 summary = kdb.load_results("bench/")
+best_first = kdb.k_accuracy(summary).index      # smallest k error first, then highest ARI
+summary.set_index("method").loc[best_first, ["k_estimated", "k_error", "ARI", "NMI"]]
 ```
 
 --8<-- "results_table.md"
@@ -53,16 +55,13 @@ ARI. ARI and NMI compare the domains with the annotated ones
 ([Evaluate a run](evaluate.md#what-each-score-measures)). The raw numbers are in
 [`summary_5k.csv`](../assets/summary_5k.csv).
 
+```python
+kdb.pl.plot_k_estimates(summary)
+```
+
 ![Estimated k of each method on sample 151509, with the reference k of 7 as a dashed line](../assets/k_estimates.png){ width="620" }
 
 Blue dots are below the reference k and red ones above. A dot on it would be green.
-
-* No method returned the reference k of 7. **PRECAST** came closest, with 5 domains.
-* **BayesSpace, DeepST and SpaGCN** returned 4. DeepST has the highest ARI (0.54).
-* **SC.MEB and SpatialDE2** returned 10. Five of SpatialDE2's domains have 7 spots or fewer.
-* **DR.SC** returned 15 domains, the largest k error.
-* **BNPSpace and CellCharter** returned 2 domains and **iSC.MEB** 3. BNPSpace put 4,610 of the
-  4,786 spots in one domain (ARI 0.05).
 
 ## 4. The domains on the tissue
 
@@ -72,20 +71,17 @@ fig = kdb.pl.plot_spatial_grid(results, h5ad, ncols=5)
 
 ![Spatial domains of the ten methods on sample 151509](../assets/spatial_domains.png)
 
-Compare each map with the reference annotation above. A method with fewer domains merges
-layers into broad bands, and one with more splits layers into patches. Colors follow the sorted
-label names, so the same color in two maps does not mean the same domain.
+Compare each map with the reference annotation above. Colors follow the sorted label names, so
+the same color in two maps does not mean the same domain.
 
 ## 5. The twelve metrics
 
-`kdomainbench metrics` scores every run with the twelve metrics of the paper, and
-`kdb.pl.plot_metrics` draws them:
-
-```bash title="terminal"
-kdomainbench metrics bench/
-```
+`kdb.metrics` scores a run with the twelve metrics of the paper, and `kdb.pl.plot_metrics`
+draws them:
 
 ```python
+for run in summary.loc[summary["success"], "out_dir"]:
+    kdb.metrics(run)                      # saved as metric.csv in the run folder
 summary = kdb.load_results("bench/")      # read again, now with the metrics
 kdb.pl.plot_metrics(summary)
 ```
@@ -95,28 +91,13 @@ kdb.pl.plot_metrics(summary)
 A darker bar is a better rank among the ten methods
 ([Evaluate a run](evaluate.md#plot-the-metrics) explains the figure).
 
-* **DeepST** ranks first in five of the six concordance metrics.
-* **SC.MEB and DR.SC**, with 10 and 15 domains, rank first and second in purity, homogeneity
-  and SCS, and among the last three in completeness, LISI, PAS and CHAOS.
-* **BNPSpace**, which put nearly every spot in one domain, ranks last in seven metrics and
-  first in completeness, LISI, PAS and CHAOS.
-
-!!! note "One sample, one run"
-    This page shows that the pipeline works end to end. One sample with one seed per method
-    does not rank the methods. The runs shown are those of the paper's benchmark, where
-    CellCharter and DeepST ran on a GPU. A run of yours can differ. On sample 151507, CPU runs
-    through this package gave another k for CellCharter and DeepST (4 for both, against 3 and
-    5) and other domains with the same k for BayesSpace, SC.MEB and SpaGCN (BayesSpace: ARI
-    0.35 against 0.28). The other five methods scored the same. The paper's runs used another
-    software environment, described in the paper, and the cause of the BayesSpace and SpaGCN
-    differences was not isolated.
-
-## Reproduce
+## From the shell
 
 ```bash title="terminal"
-kdomainbench run -m all -i data/D3_151509_5k.h5ad -k 30 -d cpu -o bench/
+kdomainbench run -m all -i data/D3_151509_5k.h5ad -o bench/
+kdomainbench metrics bench/
 kdomainbench summarize bench/ --csv summary.csv --plot k.png
-python scripts/make_results_page.py bench/ data/D3_151509_5k.h5ad    # this page's table and figures
 ```
 
-The first command runs the methods one after another.
+The first command runs the methods one after another, and the second needs the metric packages
+([Installation](../installation.md#the-metric-packages)).

@@ -19,9 +19,10 @@ Each stand-in run first checks its arguments as kdb.run does.
 It checks that each example runs. It does not compare what an example prints with the output
 shown on the page, which comes from the site's own runs.
 
-    python scripts/check_docs.py --h5ad D3_151509_5k.h5ad --reuse kdb_test/results --work /tmp/check
+    python scripts/check_docs.py --h5ad data/D3_151509_5k.h5ad --reuse kdb_test/results --work /tmp/check
 """
 import argparse
+import ast
 import contextlib
 import io
 import os
@@ -39,7 +40,7 @@ BASICS = ["tutorials/discover.md", "tutorials/run.md", "tutorials/evaluate.md"]
 PAGES = ["installation.md", "quickstart.md", *BASICS, "tutorials/benchmark.md", "how-to/own_data.md", "faq.md",
          "api.md", "reference/methods.md", "reference/setup.md", "reference/cli.md"]
 FAST = {"SpaGCN", "DR.SC", "SC.MEB", "iSC.MEB"}
-SKIP_SHELL = re.compile(r"--gpu|-d gpu|-m all")
+SKIP_SHELL = re.compile(r"--gpu|(-d|--device)[ =]gpu|-m all")
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""          # nothing in this process may touch a GPU
 import matplotlib  # noqa: E402
@@ -141,10 +142,16 @@ def run_python(code, ns, label):
         note("skipped: template with placeholder paths")
         return True
     buf = io.StringIO()
+    val = None
     with warnings.catch_warnings(record=True) as w, contextlib.redirect_stdout(buf):
         warnings.simplefilter("always")
         try:
-            exec(compile(code, label, "exec"), ns)
+            tree = ast.parse(code, label)
+            # a block that ends in a bare expression shows its value, as a notebook would
+            last = tree.body.pop() if tree.body and isinstance(tree.body[-1], ast.Expr) else None
+            exec(compile(tree, label, "exec"), ns)
+            if last:
+                val = eval(compile(ast.Expression(last.value), label, "eval"), ns)
             ok = True
         except Exception:
             ok = False
@@ -156,23 +163,9 @@ def run_python(code, ns, label):
         note("stdout: " + buf.getvalue().strip().replace("\n", "\n            ")[:1500])
     if not ok:
         note("FAILED:\n" + err)
-    return ok
-
-
-def last_value(code, ns):
-    """Show the value of a block's last bare expression, as a notebook would."""
-    lines = [ln for ln in code.strip().splitlines() if ln.strip() and not ln.lstrip().startswith("#")]
-    if not lines:
-        return
-    expr = lines[-1].split("#")[0].strip()
-    if not expr or "=" in expr.replace("==", "") or expr.startswith(("for ", "import ", "from ", "print(")):
-        return
-    try:
-        val = eval(expr, ns)
-    except Exception:
-        return
-    if val is not None and not hasattr(val, "figure") and type(val).__name__ not in ("Figure", "Axes"):
+    elif val is not None and not hasattr(val, "figure") and type(val).__name__ not in ("Figure", "Axes"):
         note("value: " + repr(val).replace("\n", "\n            ")[:1500])
+    return ok
 
 
 def run_shell(code):
@@ -197,8 +190,8 @@ def run_shell(code):
 
 def docstring_examples():
     import inspect
-    # every public function and class, but not kdb.metrics: it needs the metric R packages and
-    # 3 minutes, and KDB_TEST_METRICS=1 tests it against the paper's values
+    # every public function and class, but not kdb.metrics: it needs the metric R packages, and
+    # KDB_TEST_METRICS=1 tests it against the paper's values
     funcs = [getattr(kdb, n) for n in kdb.__all__ if callable(getattr(kdb, n)) and n != "metrics"]
     funcs += [getattr(kdb.pl, n) for n in kdb.pl.__all__]
     for f in funcs:
@@ -213,13 +206,16 @@ def main():
     work.mkdir(parents=True, exist_ok=True)
     kdb.run = runner.run = stub_run        # kdb.run for the pages, runner.run for run_all
     results = {}
-    pages = ARGS.pages or PAGES
-    targets = [(p, list(blocks(p))) for p in pages if p != "docstrings"] + ([("docstrings", [("python", c) for _, c in docstring_examples()])]
-                                                         if not ARGS.pages or "docstrings" in ARGS.pages else [])
+    pages = ARGS.pages or [*PAGES, "docstrings"]
+    targets = [(p, list(blocks(p))) for p in pages if p != "docstrings"]
+    if "docstrings" in pages:
+        targets.append(("docstrings", [("python", code) for _, code in docstring_examples()]))
+    docs = sorted(str(f.relative_to(ROOT / "docs")) for f in (ROOT / "docs").rglob("*.md"))
+    print("pages with code that is not in PAGES:", ", ".join(p for p in docs if p not in PAGES and list(blocks(p))))
     for page, bl in targets:
-        # Installation, Quickstart and the step-by-step tutorials share one folder (kdb_results/ from
-        # "Run a method" feeds "Evaluate a run"), as for a reader who follows them in order; the
-        # benchmark tutorial and the docstrings start fresh.
+        # Installation, Quickstart, the step-by-step tutorials and the set-up reference share one
+        # folder (kdb_results/ from "Run a method" feeds "Evaluate a run"), as for a reader who
+        # follows them in order; every other page and the docstrings start fresh.
         shared = page in ("installation.md", "quickstart.md", "reference/setup.md", *BASICS)
         d = work / ("getstarted" if shared else page.replace("/", "_").replace(".md", ""))
         (d / "data").mkdir(parents=True, exist_ok=True)
@@ -246,8 +242,6 @@ def main():
             label = f"{page}#{i}"
             print(f"  [{label}] {kind}: {code.strip().splitlines()[0][:90] if code.strip() else ''}", flush=True)
             ok = run_python(code, ns, label) if kind == "python" else run_shell(code)
-            if ok and kind == "python":
-                last_value(code, ns)
             results[label] = ok
             matplotlib.pyplot.close("all")
             note("OK" if ok else "*** FAILED ***")

@@ -43,8 +43,7 @@ print(adata)
 
 The file now holds the raw counts and the three sets of coordinates the methods read
 ([Inputs](../tutorials/run.md#inputs)). Keep the counts raw. The method scripts expect them and
-do their own normalization. For a mouse sample, see the
-[FAQ](../faq.md#does-it-work-for-mouse-or-for-another-tissue).
+do their own normalization.
 
 ## 2. Run methods
 
@@ -58,9 +57,8 @@ results = kdb.run_all(h5ad, methods=["DR.SC", "SpaGCN", "iSC.MEB"], out_root="my
 ```
 
 Each method prints its output and, when it finishes, one line with its estimated k. A method
-that stops with an error is reported as
-`failed`, and one whose environment was not found as `not run`. The others go on, and a warning
-at the end names every method that did not finish, with its log.
+that fails is reported as `failed` or `not run` and does not stop the others
+([Run several methods](../tutorials/run.md#run-several-methods)).
 
 !!! warning "On a remote server"
     The run stops when the connection to the server closes. `tmux` keeps a terminal session
@@ -105,12 +103,11 @@ kdb.pl.plot_spatial(results["SpaGCN"], h5ad, legend=True)  # one method, with it
 
 ### The methods will disagree
 
-On sample 151509, whose annotation has 7 domains, the estimates of the ten methods range from
-2 to 15 ([Benchmark the ten methods](../tutorials/benchmark.md#3-estimated-k-and-accuracy)).
+Different methods return different numbers of domains for the same sample
+([Benchmark the ten methods](../tutorials/benchmark.md#3-estimated-k-and-accuracy)).
 Read the estimates as candidates, not as the answer.
 
 **Check the domain sizes.** A domain of a few spots adds to k without being a tissue region.
-SpatialDE2 returned 10 domains on sample 151509, and 5 of them had 7 spots or fewer.
 
 ```python
 {name: sorted(c["cluster"].value_counts(), reverse=True) for name, c in results.items()}

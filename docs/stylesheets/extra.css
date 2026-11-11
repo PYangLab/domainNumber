@@ -112,7 +112,7 @@ body, .md-typeset {
 }
 
 .md-typeset {
-  font-size: 15px;        /* documentation scale (was ~20px); body reads at 15/1.65 */
+  font-size: 15px;        /* body reads at 15/1.65 */
   line-height: 1.65;
   color: var(--text);
 }
@@ -170,7 +170,6 @@ body, .md-typeset {
 }
 
 .md-typeset strong { font-weight: 600; color: var(--text); }
-.md-typeset em { font-style: italic; }
 
 /* No ligatures in code: '>=', '->' and '!=' stay the characters a reader types. */
 .md-typeset code, .md-typeset pre, .md-typeset kbd {
@@ -178,11 +177,8 @@ body, .md-typeset {
   font-variant-ligatures: none;
   font-feature-settings: "calt" 0, "liga" 0;
 }
-/* Code BLOCKS on markdown pages were ~18.5px (Material's 0.84rem at our 22px root)
-   — bigger than the 15px body. Pin to the site's 13px code size.
-   Inline code keeps its own 0.86em rule. */
+/* Code blocks: 13px at every root size. Inline code keeps 0.86em. */
 .md-typeset .highlight pre,
-.md-typeset .highlight pre > code,
 .md-typeset pre > code {
   font-size: 13px;
 }
@@ -208,8 +204,6 @@ body, .md-typeset {
    Landing page: 2-column hero with the animated card, 4 link cards,
    3 feature columns on a grey band
    ============================================================ */
-
-.md-typeset .lp { margin: 0; }
 
 
 /* ━━━━━━━━ HERO ━━━━━━━━ */
@@ -257,7 +251,7 @@ html body .md-typeset .lp .lp-hero-text > h1 {
   margin: 0;
 }
 
-/* Get Started — plain ink button, no arrow, no violet effects */
+/* Hero buttons: plain ink, no accent colour */
 html body .md-typeset .lp .lp-cta {
   background: var(--text) !important;
   color: var(--bg) !important;
@@ -273,30 +267,22 @@ html body .md-typeset .lp .lp-cta {
   transition: opacity 150ms cubic-bezier(0.4,0,0.2,1), transform 160ms var(--ease-out);
 }
 html body .md-typeset .lp .lp-cta:hover {
-  background: var(--text) !important;
-  border-color: var(--text) !important;
-  color: var(--bg) !important;
   opacity: 0.86;
 }
 
 /* Hero card: holds the task-flow animation */
 .md-typeset .lp-hero-card {
   position: relative;
-  background: transparent;
-  border: none;
-  border-radius: 0;
   padding: 8px 0;
-  overflow: visible;
 }
 
 
 /* ━━━━━━━━ Home: pull the content up under the header ━━━━━━━━ */
 
 
-body:has(.md-typeset .lp) .md-content__inner::before { display: none; height: 0; }
+body:has(.md-typeset .lp) .md-content__inner::before { display: none; }
 body:has(.md-typeset .lp) .md-content__inner { padding-top: 0.25rem; }
 body:has(.md-typeset .lp) .md-main__inner { margin-top: 0.4rem; }   /* default 1.5rem */
-body:has(.md-typeset .lp) .md-typeset .lp-hero { padding-top: 4px; }
 
 /* ━━━━━━━━ Home: fill the viewport as one no-scroll screen ━━━━━━━━ */
 /* the 24px content-inner bottom margin pushed the page past 100vh (caused a scroll) */
@@ -321,8 +307,8 @@ body:has(.md-typeset .lp) .md-typeset .lp {
   body:has(.md-typeset .lp) .md-typeset .lp-card .lp-card-desc { font-size: 14px; }
   body:has(.md-typeset .lp) .md-typeset .lp-section--band { padding: 30px 0 32px; }
 }
-/* at >=100em the header collapses to one compact row (~40px shorter), so the
-   landing starts higher, give .lp that height back so the band still hits the bottom */
+/* at >=100em the header is one shorter row: give .lp that height back so the
+   band still reaches the bottom */
 @media (min-width: 100em) {
   body:has(.md-typeset .lp) .md-typeset .lp { min-height: calc(100vh - 113px); }
 }
@@ -342,7 +328,7 @@ body:has(.md-typeset .lp) .md-typeset .lp {
   --tf-spot:        var(--border-strong);
   /* an estimate below, at and above the reference k: the colours of kdb.pl.plot_k_estimates */
   --tf-under:       #3a6ba5;
-  --tf-exact:       #4f9463;
+  --tf-exact:       #659b72;
   --tf-over:        #c65a36;
 }
 [data-md-color-scheme="slate"] .md-typeset .taskflow {
@@ -492,7 +478,6 @@ body:has(.md-typeset .lp) .md-typeset .lp {
 .md-typeset .lp-section {
   padding: 16px 0 0;
 }
-.md-typeset .lp-section + .lp-section { padding-top: 10px; }
 
 
 /* Features band — solid grey spanning the full viewport width (no gradient).
@@ -502,12 +487,11 @@ body:has(.md-typeset .lp) .md-typeset .lp {
 .md-typeset .lp-section--band {
   position: relative;
   margin-top: 16px;
-  padding: 24px 0 26px;
+  padding: 16px 0 26px;
   background: var(--bg-elevated);
   box-shadow: 0 0 0 100vmax var(--bg-elevated);
   clip-path: inset(0 -100vmax);
 }
-.md-typeset .lp-section + .lp-section--band { padding-top: 16px; }
 
 /* 4-across grid */
 .md-typeset .lp-grid-4 {
@@ -548,7 +532,7 @@ body:has(.md-typeset .lp) .md-typeset .lp {
   display: block;
 }
 
-/* Tutorial link cards — OpenAI "Build paths" interaction */
+/* Tutorial link cards */
 .md-typeset .lp-card-link a.lp-card-cover {
   text-decoration: none !important;
   color: inherit !important;
@@ -618,7 +602,6 @@ body:has(.md-typeset .lp) .md-typeset .lp {
 }
 @media (max-width: 560px) {
   .md-typeset .lp-grid-4 { grid-template-columns: 1fr; }
-  .md-typeset .lp-feature-row { grid-template-columns: 1fr; }
 }
 
 
@@ -647,8 +630,7 @@ body:has(.md-typeset .lp) .md-typeset .lp {
 }
 
 /* ───────── API reference formatting ─────────
-   Code inside a heading IS the signature — render it as clean monospace at the
-   heading's size (no inline-code pill), and separate each method with a divider. */
+   Inline code in a heading: monospace at the heading's weight, no pill. */
 .md-typeset h1 code:not(pre code),
 .md-typeset h2 code:not(pre code),
 .md-typeset h3 code:not(pre code),
@@ -694,7 +676,7 @@ body:has(.md-typeset .lp) .md-typeset .lp {
 .md-typeset [class*="highlight"] .mi, .md-typeset [class*="highlight"] .mo,
 .md-typeset [class*="highlight"] .il { color: var(--text); }
 
-/* Swiss-minimal filename label — inline mono prefix, no dark strip */
+/* Filename label: inline mono prefix, no dark strip */
 .md-typeset .highlight .filename {
   background: transparent;
   color: var(--text-faint);
@@ -711,10 +693,6 @@ body:has(.md-typeset .lp) .md-typeset .lp {
   content: "// ";
   color: var(--text-faint);
   opacity: 0.7;
-}
-[data-md-color-scheme="slate"] .md-typeset .highlight .filename {
-  background: transparent;
-  color: var(--text-faint);
 }
 .md-typeset .highlight:has(.filename) > pre { border-radius: 0; }
 .md-typeset .highlight:has(.filename) > pre > code {
@@ -737,7 +715,7 @@ body:has(.md-typeset .lp) .md-typeset .lp {
   border-radius: 0.5rem;
   overflow: hidden;
   box-shadow: var(--shadow-xs);
-  font-size: 14px;          /* was 0.92rem (~20px) */
+  font-size: 14px;
 }
 .md-typeset table:not([class]) th {
   background: var(--bg-subtle);
@@ -771,7 +749,7 @@ body:has(.md-typeset .lp) .md-typeset .lp {
      e.g. the green `tip` box border); only the LEFT edge carries the accent. */
   border: 1px solid var(--border) !important;
   border-left-width: 3px !important;
-  font-size: 14px;            /* was 0.88rem (~19px) — bigger than body; tighten */
+  font-size: 14px;
   box-shadow: var(--shadow-xs);
   background: var(--bg-card);
 }
@@ -783,10 +761,8 @@ body:has(.md-typeset .lp) .md-typeset .lp {
 }
 /* Admonition icon: neutral grey, never Material's per-type colour (e.g. the green flame) */
 .md-typeset .admonition-title::before { background-color: var(--text-muted) !important; }
-/* Left accent: blue for the types the pages use, amber for a warning. */
-.md-typeset .admonition.tip,
-.md-typeset .admonition.note,
-.md-typeset .admonition.info { border-left-color: var(--brand-600) !important; }
+/* Left accent: blue, amber for a warning. */
+.md-typeset .admonition { border-left-color: var(--brand-600) !important; }
 .md-typeset .admonition.warning { border-left-color: var(--amber) !important; }
 
 
@@ -799,9 +775,7 @@ body:has(.md-typeset .lp) .md-typeset .lp {
    Sizes are in em of the 14px block text, so the bar and the body keep their
    proportions at every root size Material sets.
    Specificity: Material puts the summary padding and the chevron position under
-   `[dir=ltr] .md-typeset summary`, hence the `[dir]` prefix; mkdocs-jupyter's
-   inline CSS (loaded after this file) sets `.jupyter-wrapper p {margin:0 0 10px}`,
-   hence `details > p`, one element more specific. */
+   `[dir=ltr] .md-typeset summary`, hence the `[dir]` prefix. */
 
 .md-typeset details {
   margin: 1em 0 1.25em;
@@ -876,14 +850,9 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
    every focus state. A mouse click leaves no halo at all; keyboard users still
    get a subtle on-brand blue ring. */
 .md-typeset details,
-.md-typeset details > summary,
-.md-typeset details:focus,
-.md-typeset details:focus-within,
-.md-typeset details > summary:focus,
-.md-typeset details > summary:active {
+.md-typeset details > summary {
   outline: none !important;
 }
-.md-typeset details > summary:focus:not(:focus-visible),
 .md-typeset details:focus-within {
   box-shadow: none !important;
 }
@@ -922,8 +891,6 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
   height: 56px;          /* fills the header without raising its height */
   width: auto;
 }
-/* The kDomainBench logo is in colour and reads on both themes, so it is not inverted in dark mode. */
-
 .md-tabs {
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
@@ -931,10 +898,9 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
   color: var(--text);
 }
 [data-md-color-scheme="slate"] .md-tabs { background: var(--bg); }
-/* Swiss 2px ink-underline tabs */
+/* Tabs with a 2px ink underline */
 .md-tabs__list {
   gap: 4px;
-  padding: 0;
 }
 .md-tabs__item { height: auto; }
 .md-tabs__link {
@@ -946,18 +912,13 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
   opacity: 1;
   padding: 9px 12px;
   margin: 0;
-  border-radius: 0;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
-  background: transparent;
-  transition: color 180ms cubic-bezier(0.4, 0, 0.2, 1),
-              border-bottom-color 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 180ms cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 .md-tabs__link:hover {
   color: var(--text) !important;
-  background: transparent;
-  border-bottom-color: var(--border-strong);
 }
 
 
@@ -1019,11 +980,8 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
   .md-header label[for="__drawer"],
   .md-header label.md-header__button[for="__search"] { display: none; }
 
-  /* Tabs sit inline: kill the band, the sticky offset, and the underline */
+  /* Tabs sit inline: no band */
   .md-tabs {
-    position: static;
-    height: auto;
-    overflow: visible;
     background: transparent !important;
     border-bottom: none !important;
     box-shadow: none !important;
@@ -1036,18 +994,13 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
     padding: 0;
   }
   .md-tabs__list {
-    margin: 0;
     gap: 2px;
-    white-space: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
   .md-tabs__link {
     padding: 6px 12px;
     margin: 0;
-    border-bottom: none;            /* no underline bar when inline */
+    border-bottom: none;
   }
-  .md-tabs__link:hover { border-bottom: none; color: var(--text) !important; }
 }
 
 
@@ -1060,11 +1013,6 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
   .md-header__button.md-logo { display: inline-block; }
   .md-header .md-logo img { height: 44px; }
   .md-tabs { display: block; }
-  .md-tabs__list {
-    overflow-x: auto;
-    scrollbar-width: none;
-    white-space: nowrap;
-  }
   .md-tabs__list::-webkit-scrollbar { display: none; }
 
   /* The drawer's top: the site's white header, not Material's primary colour */
@@ -1105,29 +1053,22 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
 
 .md-nav__link {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;        /* sidebar nav: was 0.84rem (~18.5px), too big vs body */
+  font-size: 14px;
   color: var(--text-muted);
   transition: color var(--dur-fast) var(--ease-out);
 }
 .md-nav__link:hover { color: var(--text); }
-.md-nav__item--active > .md-nav__link {
-  color: var(--brand-600) !important;
-  font-weight: 600;
-}
 .md-nav__title {
   font-family: 'Inter', sans-serif;
   font-weight: 700;
-  font-size: 11px;        /* section/TOC labels (was 0.72rem ~15.8px) */
+  font-size: 11px;        /* section and TOC labels */
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-faint);
 }
 
-/* ===== Left nav = a floating panel (few items → a compact card, not a full rail).
-   Roles are visually distinct so the title and the active item never collide:
-     • BOLD dark  = section title (a <label>, not a link)
-     • regular    = the page options (<a> links)
-     • raised white chip + soft shadow = the SELECTED page ("阴影代表选中")          */
+/* Left nav: a floating panel. Section titles (<label>) are bold ink, pages (<a>)
+   regular, the current page is a grey chip with a soft shadow. */
 .md-sidebar--primary .md-nav--primary > .md-nav__list {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -1165,10 +1106,10 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
 [data-md-color-scheme="slate"] .md-sidebar--primary a.md-nav__link:hover {
   background: rgba(255, 255, 255, 0.06);
 }
-/* the SELECTED page — a raised white chip; the shadow signals "you are here" */
+/* the current page */
 .md-sidebar--primary .md-nav__item--active > a.md-nav__link,
 .md-sidebar--primary a.md-nav__link--active {
-  background: var(--bg-subtle) !important;   /* grey selection, not white */
+  background: var(--bg-subtle) !important;
   color: var(--text) !important;
   font-weight: 500 !important;
   /* soft, EVEN shadow — enough blur (>offset) that the top edge is as soft as the
@@ -1195,8 +1136,7 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
   border-left: 2px solid transparent;
   padding-left: 0.6rem;
   margin-left: 0;
-  transition: color var(--dur-fast) var(--ease-out),
-              border-left-color var(--dur-fast) var(--ease-out);
+  transition: color var(--dur-fast) var(--ease-out);
 }
 /* item padding (not link margin) widens the gap reliably — vertical margins between
    block siblings collapse, padding doesn't; the link box stays text-height so the
@@ -1270,7 +1210,7 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
 }
 
 
-/* Scroll progress bar at very top (Bioconductor-style) */
+/* Scroll progress bar at the very top */
 .scroll-progress {
   position: fixed;
   top: 0;
@@ -1363,7 +1303,7 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
 }
 .md-search__form:hover { border-color: var(--border-strong); }
 .md-search__form:focus-within {
-  border-color: var(--text);   /* black active border, not violet */
+  border-color: var(--text);
 }
 /* The focused input draws a violet :focus-visible halo by default — make it black */
 .md-search__input:focus-visible {
@@ -1374,7 +1314,7 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
   font-size: 14px;            /* match the nav links (Home / Get started / …) */
   color: var(--text);
 }
-.md-search__input::placeholder { color: var(--text-faint); font-size: 14px; }
+.md-search__input::placeholder { color: var(--text-faint); }
 
 /* Narrower search box on desktop (the single-row header is tight on space).
    Use .md-header specificity to beat Material's default .md-search__inner width. */
@@ -1388,8 +1328,8 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
      them. Collapsed, the search sits far right and never overlaps the nav. */
   .md-header .md-search { z-index: 4; }
   .md-search__form { height: 1.9rem; }
-  .md-search__input { padding-left: 1.9rem; font-size: 14px; }
-  /* magnifier icon (restored) sits left, sized to the smaller field */
+  .md-search__input { padding-left: 1.9rem; }
+  /* the magnifier icon sits left, sized to the smaller field */
   .md-search__icon[for="__search"] { width: 1.1rem; height: 1.1rem; }
 }
 
@@ -1405,9 +1345,8 @@ html .md-typeset details > :last-child:not(summary) { margin-bottom: 0.9em; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner { background: transparent !important; }
-/* Force a grey thumb in EVERY state. While actively dragging, Chrome on macOS
-   tints the thumb with the OS accent colour (red on some machines) — hence
-   "sometimes grey, sometimes red". !important on :hover/:active overrides it. */
+/* A grey thumb in every state: while dragging, Chrome on macOS tints the thumb
+   with the OS accent colour. */
 ::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb:active,
 ::-webkit-scrollbar-thumb:window-inactive {
@@ -1492,11 +1431,10 @@ html body .md-typeset .lp .lp-cta:active,
   .back-to-top:active { transform: none; }
 }
 
-/* — Top-nav tabs: a 2px underline that grows from the centre (replaces the
-     border-color fade). The CURRENT section's tab stays underlined: Material marks
-     the <li> as .md-tabs__item--active (not the link), shown with an ink underline
-     + ink label — black/white/grey only, no accent colour. — */
-.md-tabs__link { border-bottom-color: transparent !important; }
+/* — Top-nav tabs: a 2px underline that grows from the centre. The CURRENT section's
+     tab stays underlined: Material marks the <li> as .md-tabs__item--active (not the
+     link), shown with an ink underline + ink label, black/white/grey only, no accent
+     colour. — */
 .md-tabs__link::after {
   content: "";
   position: absolute;

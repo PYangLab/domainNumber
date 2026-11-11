@@ -5,8 +5,6 @@ from pathlib import Path
 
 import pandas as pd
 
-SCORES = ["k_reference", "k_error", "ARI", "NMI", "n_spots_scored", "score_error"]
-
 
 def read_clusters(path):
     """Read the domains of one run.
@@ -25,7 +23,7 @@ def read_clusters(path):
     Raises
     ------
     FileNotFoundError
-        There is no such folder or file.
+        There is no such folder or file, or the run did not finish.
     ValueError
         The file has no ``cluster`` column, or it is the input ``.h5ad`` file.
 
@@ -40,6 +38,13 @@ def read_clusters(path):
         path = path / "cluster_results.csv"
     if path.suffix == ".h5ad":
         raise ValueError(f"{path} is an input file: read_clusters reads a run folder or its cluster_results.csv")
+    if not path.is_file():
+        if path.name == "cluster_results.csv" and (path.parent / "run_info.json").is_file():
+            raise FileNotFoundError(f"{path.parent} has no cluster_results.csv: the run did not finish, "
+                                    f"see {path.parent / 'run.log'}")
+        raise FileNotFoundError(f"{path} not found: read_clusters reads one run folder "
+                                f"(<out_root>/<method>/<dataset>_<device>) or its cluster_results.csv. "
+                                f"kdb.load_results(folder)['out_dir'] lists the run folders under a folder")
     df = pd.read_csv(path, dtype=str)                       # barcodes stay text, also when they look like numbers
     if "cluster" not in df:
         raise ValueError(f"no 'cluster' column in {path}")
@@ -62,9 +67,14 @@ def _labels(clusters):
     return labels
 
 
-def _check_table(summary):
+def _check_table(summary, *columns):
+    """Raise unless ``summary`` is the table of load_results, with these columns."""
     if not isinstance(summary, pd.DataFrame):
         raise TypeError(f"summary must be the table from kdb.load_results, not a {type(summary).__name__}")
+    missing = [c for c in ("method", "success", *columns) if c not in summary]
+    if missing:
+        raise KeyError(f"summary has no column {', '.join(map(repr, missing))}: pass the whole table from "
+                       f"kdb.load_results, not a selection of its columns")
 
 
 def _read(h5ad, obsm_key=None):
@@ -112,6 +122,8 @@ def reference_annotation(h5ad, reference_key="clusters"):
         ``h5ad`` is not a file.
     KeyError
         ``obs`` has no column ``reference_key``. The message lists the columns it has.
+    ValueError
+        ``h5ad`` is not an ``.h5ad`` file.
 
     Examples
     --------
@@ -140,7 +152,8 @@ def evaluate(clusters, reference):
     reference : path or anndata.AnnData or pandas.Series or pandas.DataFrame
         The ``.h5ad`` file or AnnData object (its ``obs["clusters"]`` is read), the labels
         from [reference_annotation][kdomainbench.reference_annotation], or another run (its
-        labels or its run folder) to see how far two methods agree.
+        labels or its run folder) to see how far two methods agree. For another ``obs``
+        column, pass ``kdb.reference_annotation(h5ad, reference_key=...)``.
 
     Returns
     -------
@@ -159,11 +172,11 @@ def evaluate(clusters, reference):
         ``clusters`` or ``reference`` is not one of the types above.
     ValueError
         No spot has both a label and an annotation (the two do not use the same barcodes),
-        or a barcode occurs twice.
+        a barcode occurs twice, or the file is not an ``.h5ad`` file.
 
     Examples
     --------
-    >>> kdb.evaluate(clusters, "data/D3_151509_5k.h5ad")
+    >>> kdb.evaluate("kdb_results/SpaGCN/D3_151509_5k_cpu", "data/D3_151509_5k.h5ad")
     {'k_estimated': 4, 'k_reference': 7, 'k_error': -3, 'ARI': 0.4487, 'NMI': 0.5694, 'n_spots_scored': 4786}
     """
     from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
@@ -212,16 +225,17 @@ def load_results(root="kdb_results", reference_key="clusters", score=True, h5ad=
         ``device_used``, ``kmax``, ``k_estimated``, ``k_reference``, ``k_error``, ``ARI``,
         ``NMI``, ``wall_time_s``, ``peak_rss_mb``, ``success``, ``n_spots_scored``,
         ``score_error`` and ``out_dir`` (the run folder), then the other fields of
-        ``run_info.json`` (``n_spots`` is the number of labeled spots). A run that could not be
-        scored, for example because its file has no annotation, has the reason in
-        ``score_error`` and no scores. With ``reference_key="clusters"``, a run with a
-        ``metric.csv`` from [metrics][kdomainbench.metrics] also has the ten other metrics of
-        the paper as columns.
+        ``run_info.json`` except ``command`` (``n_spots`` is the number of labeled spots). A run
+        that could not be scored, for example because its file has no annotation, has the
+        reason in ``score_error`` and no ``k_reference``, ``k_error``, ``ARI`` or ``NMI``. With
+        ``reference_key="clusters"``, a run with a ``metric.csv`` from
+        [metrics][kdomainbench.metrics] also has the ten other metrics of the paper as columns.
+        The table is empty, with the columns above, when ``root`` holds no run.
 
     Raises
     ------
     FileNotFoundError
-        ``root`` is not a folder.
+        ``root`` is not a folder, or a file given as ``h5ad`` does not exist.
     ValueError
         ``h5ad`` is one file and the runs are of several datasets, or ``h5ad`` names a
         dataset that has no run under ``root``.
@@ -238,14 +252,18 @@ def load_results(root="kdb_results", reference_key="clusters", score=True, h5ad=
     from .paper_metrics import METRICS          # here, since paper_metrics imports this module
     if not Path(root).is_dir():
         raise FileNotFoundError(f"no such folder: {root}")
+    if h5ad is not None:
+        for file in h5ad.values() if isinstance(h5ad, dict) else [h5ad]:
+            if not Path(file).is_file():
+                raise FileNotFoundError(f"input file not found: {file}")
     rows = []
     for info_file in sorted(Path(root).rglob("run_info.json")):
         try:
             info = json.loads(info_file.read_text())
         except ValueError:                      # a record cut short, e.g. by a full disk
-            info = dict(success=False, score_error="run_info.json cannot be read")
+            info = dict(success=False, score_error=f"run_info.json cannot be read: {info_file.parent}")
         info["out_dir"] = str(info_file.parent)
-        info.pop("command", None)
+        info.pop("command", None)               # a long list, of no use as a table column
         rows.append(info)
     datasets = sorted({info["dataset"] for info in rows if "dataset" in info})
     if isinstance(h5ad, dict) and set(h5ad) - set(datasets):
@@ -271,8 +289,8 @@ def load_results(root="kdb_results", reference_key="clusters", score=True, h5ad=
     cols = ["method", "dataset", "device_requested", "device_used", "kmax", "k_estimated", "k_reference",
             "k_error", *METRICS, "wall_time_s", "peak_rss_mb", "success", "n_spots_scored", "score_error", "out_dir"]
     df = pd.DataFrame(rows)
-    for c in cols[:8] + ["wall_time_s", "peak_rss_mb", "success", *SCORES, "out_dir"]:   # whatever the folder holds
-        if c not in df:
+    for c in cols:                              # always there, except the ten metrics that need a metric.csv
+        if c not in df and (c not in METRICS or c in ("ARI", "NMI")):
             df[c] = pd.NA
     for c in ("k_estimated", "k_reference", "k_error", "n_spots", "n_spots_scored"):   # integers, also when some runs have none
         if c in df:
@@ -303,6 +321,8 @@ def k_accuracy(summary):
     ------
     TypeError
         ``summary`` is not a table, for example a folder name.
+    KeyError
+        ``summary`` lacks a column of the [load_results][kdomainbench.load_results] table.
 
     Warns
     -----
@@ -319,11 +339,11 @@ def k_accuracy(summary):
     DeepST      1               3.0         0.0    0.5416
     SpaGCN      1               3.0         0.0    0.4487
     """
-    _check_table(summary)
+    _check_table(summary, "k_reference", "k_error", "ARI")
     done = summary[summary["success"].astype(bool)]
     ok = done[done["k_reference"].notna()]
     if len(done) and ok.empty:
-        reason = done["score_error"].dropna()
+        reason = done.get("score_error", pd.Series(dtype=object)).dropna()     # a table made by hand may lack it
         warnings.warn("no successful run could be scored" + (f": {reason.iloc[0]}" if len(reason) else ""),
                       stacklevel=2)
     return (ok.assign(abs_err=ok["k_error"].abs(), exact=ok["k_error"].eq(0))

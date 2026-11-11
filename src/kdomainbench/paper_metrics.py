@@ -52,7 +52,7 @@ def metrics(run, h5ad=None, recompute=False):
     -------
     pandas.Series
         ``ARI``, ``spARI``, ``NMI``, ``FM``, ``AMI``, ``Purity``, ``HOM``, ``COM``, ``PAS``,
-        ``CHAOS``, ``LISI`` and ``SCS``.
+        ``CHAOS``, ``LISI`` and ``SCS``. ``SCS`` is NaN for a run with one domain.
 
     Raises
     ------
@@ -88,7 +88,7 @@ def metrics(run, h5ad=None, recompute=False):
     clusters = read_clusters(run)
     metrics_r = config.configured("metrics")    # a second R for the metrics does not get KDB_R_LIB
     steps = [  # (interpreter, script, its environment), in the order of the paper's command lists
-        (metrics_r or config.interpreter("r"), "metrics.R", config.child_env("R", r_library=not metrics_r)),
+        (config.interpreter("metrics"), "metrics.R", config.child_env("R", r_library=not metrics_r)),
         (config.interpreter("py"), "scs.py", config.child_env("Python")),
     ]
     log_path = run / "metric.log"

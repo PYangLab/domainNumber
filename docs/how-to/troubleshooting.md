@@ -1,7 +1,8 @@
 # Troubleshooting
 
-Each section starts with the message you see. A failed run keeps its whole output in `run.log`
-in its run folder, and a failed metric call in `metric.log`.
+Most sections start with the message you see in Python. From the command line the same text
+follows `kdomainbench: error:`, `[kdomainbench]` or `not scored`. A failed run keeps its whole
+output in `run.log` in its run folder, and a failed metric call in `metric.log`.
 
 ## A method stopped
 
@@ -9,8 +10,8 @@ in its run folder, and a failed metric call in `metric.log`.
 MethodFailed: <method> failed (exit <code>), see <run folder>/run.log
 ```
 
-The method itself stopped. The message ends with the last lines of its log. `run_info.json`
-records the run with `"success": false`.
+The method itself stopped. The message ends with the last 20 lines of its log, which usually
+name the cause. For a missing package, run `kdomainbench check`.
 
 ## An environment is not found
 
@@ -49,7 +50,7 @@ KeyError: no reference annotation: obs has no column 'clusters' (its columns: ..
 
 The input file has no `obs["clusters"]`. Add the annotation
 ([Your own data](own_data.md#4-if-you-have-an-annotation)), or name the column that holds it
-with `reference_key=`.
+with `reference_key=` (`--reference-key` on the command line).
 
 ## BNPSpace and `kmax`
 
@@ -57,7 +58,7 @@ with `reference_key=`.
 ValueError: BNPSpace accepts kmax up to 30
 ```
 
-BNPSpace's own code allows at most 30 domains. Run it with `kmax=30` or less.
+BNPSpace's own code allows at most 30 domains. Run it with `kmax=30` (`-k 30`) or less.
 
 ## The stack limit
 

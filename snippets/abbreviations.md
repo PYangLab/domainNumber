@@ -7,3 +7,4 @@
 *[DLPFC]: Dorsolateral prefrontal cortex.
 *[UMI]: Unique molecular identifier: one counted transcript.
 *[WM]: White matter.
+*[Bioconductor]: The repository of R packages for genomics.

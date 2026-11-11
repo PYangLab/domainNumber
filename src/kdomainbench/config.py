@@ -30,9 +30,12 @@ def set_env(key, interpreter=None, r_lib=None):
         ``"py"`` (kdb_py), ``"spatialde"`` (kdb_spatialde), ``"r"`` (your R) or ``"metrics"``
         (the R of the metric code, when it is not the R of the methods).
     interpreter : str or path, optional
-        The environment's ``python``, or ``Rscript`` for ``"r"`` and ``"metrics"``.
+        The environment's ``python``, or ``Rscript`` for ``"r"`` and ``"metrics"``. It is
+        checked when a method starts, not here.
     r_lib : str or path, optional
-        An isolated R library. The R methods then see only this library and base R.
+        An isolated R library for the R methods, whatever ``key`` is. They then see only this
+        library and base R. The metric code uses it too, unless ``"metrics"`` names its own
+        ``Rscript``.
 
     Raises
     ------
@@ -45,7 +48,7 @@ def set_env(key, interpreter=None, r_lib=None):
     >>> kdb.set_env("r", "/usr/bin/Rscript", r_lib="/path/to/R/library")
     """
     if key not in _ENV_VARS:
-        raise ValueError(f"env must be one of {list(_ENV_VARS)}")
+        raise ValueError(f"key must be one of {list(_ENV_VARS)}, not {key!r}")
     if interpreter:
         _overrides[key] = str(interpreter)
     if r_lib:
@@ -78,6 +81,9 @@ def configured(key):
 
 
 def interpreter(key):
+    """The interpreter of ``"py"``, ``"spatialde"``, ``"r"`` or ``"metrics"``, looked up in the order of the
+    module docstring. ``"metrics"`` without a setting of its own is ``"r"``. The FileNotFoundError says how to
+    install or name it."""
     path = configured(key)
     if path:
         return path
