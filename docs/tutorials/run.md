@@ -19,7 +19,7 @@ clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu")
 ```
 
 The method name is case-insensitive, and aliases such as `drsc` work. `kmax` is the largest k
-the method may consider. The [reference entry](../reference/run.md#kdomainbench.run) lists every
+the method may consider (for BNPSpace, the k it starts from). The [reference entry](../reference/run.md#kdomainbench.run) lists every
 argument and its default.
 
 While the method runs, its output is printed. The lines that start with `[kdomainbench]` come
@@ -55,7 +55,8 @@ The number of distinct labels is the method's estimated k (here 4).
 
 ## The run folder
 
-Each run writes to `<out_root>/<method>/<dataset>_<device>`, by default under `kdb_results/`:
+Each run writes to `<out_root>/<method>/<dataset>_<device>`, by default under `kdb_results/`.
+`<dataset>` is the name of the input file without `.h5ad`:
 
 ```text
 kdb_results/SpaGCN/D3_151509_5k_cpu/
@@ -91,7 +92,7 @@ The record holds more fields than shown here. The Notes of
 `kdb.read_clusters("kdb_results/SpaGCN/D3_151509_5k_cpu")` reads the labels back later.
 
 A second run into the same folder replaces the first. To keep both, give the second one another
-`out_root`, for example `kdb.run("SpaGCN", h5ad, out_root="kdb_results_kmax20", kmax=20)`.
+`out_root`, for example `kdb.run("DR.SC", h5ad, out_root="kdb_results_kmax20", kmax=20)`.
 
 ??? note "When a method fails"
     `kdb.run` raises `kdb.MethodFailed`. The message names the log and ends with its last lines:
@@ -148,9 +149,8 @@ kdb.run("CellCharter", h5ad, kmax=30, device="gpu", out_root="kdb_results_gpu")
 # [kdomainbench] CellCharter on GPU (GPU 0) -> /path/to/kdb_results_gpu/CellCharter/D3_151509_5k_gpu
 ```
 
-`gpu_id` picks the GPU ([reference entry](../reference/run.md#kdomainbench.run)). When no GPU is
-visible, a method can fall back to the CPU without saying so (DeepST does), and the run is still
-recorded as a GPU run. `kdomainbench check --gpu` tells you beforehand whether a GPU is visible.
+`gpu_id` picks the GPU ([reference entry](../reference/run.md#kdomainbench.run)), and
+`kdomainbench check --gpu` tells you beforehand whether a GPU is visible.
 
 The other seven methods have no GPU code. With `device="gpu"` they still run, on the CPU, and warn:
 
@@ -158,9 +158,6 @@ The other seven methods have no GPU code. With `device="gpu"` they still run, on
 kdb.run("PRECAST", h5ad, kmax=30, device="gpu", out_root="kdb_results_gpu")
 # UserWarning: PRECAST has no GPU implementation. It runs on the CPU.
 ```
-
-A GPU run can give a different result. On sample 151507, DeepST found k = 4 in a CPU run and
-k = 5 in the paper's GPU run. Compare methods on the same device.
 
 ## Command line
 

@@ -53,6 +53,12 @@ Changes that users of kdomainbench notice, newest first. The format follows
   `--csv` keeps every column. Warnings print without Python's source line.
 - `kdomainbench run`, `metrics` and `summarize` exit with an error code when a method did not
   finish, a metric could not be computed or no run succeeded.
+- A fatal error of `kdomainbench` is one line that starts with `kdomainbench: error:`, and a
+  method named twice runs once.
+- `kdb.read_clusters`, `kdb.load_results(h5ad=)`, `kdb.k_accuracy` and the plots say what is
+  wrong with their input: a run that did not finish, an input file that does not exist, a
+  table without the columns of `load_results`.
+- `kdb.pl.plot_spatial_grid` titles each map `<method> (k = n)`.
 - `drsc.R` no longer reads `obs["clusters"]`, so it runs on files without an annotation.
 - Python 3.10 or later.
 

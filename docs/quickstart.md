@@ -2,13 +2,9 @@
 
 Five steps take you from finding a method to a figure of its domains. Only step 3 runs a
 method. It needs Linux and the environments from [Installation](installation.md). The outputs
-shown are those of the paper's benchmark run on sample 151509
-([Example data](installation.md#example-data)), and a run of yours can differ a little
-([FAQ](faq.md#will-i-get-the-same-result-twice)).
-
-For a sample of your own, with or without an annotation, see
-[Your own data](how-to/own_data.md). [Key terms](#key-terms) at the end of this page explains
-the words used on this site.
+shown are those of the paper's benchmark ([Citation](citation.md#the-benchmark)) on sample
+151509 ([Example data](installation.md#example-data)). [Key terms](#key-terms) at the end of
+this page explains the words used on this site.
 
 Run the code from the cloned repository folder, in Python or in Jupyter
 ([FAQ](faq.md#can-i-use-jupyter)), with the `kdb_py` environment active.
@@ -24,7 +20,7 @@ kdb.list_methods(gpu_only=True)     # ['CellCharter', 'DeepST', 'SpatialDE2']
 h5ad = "data/D3_151509_5k.h5ad"
 
 # 3. run a method
-clusters = kdb.run("SpaGCN", h5ad, kmax=30, device="cpu")
+clusters = kdb.run("SpaGCN", h5ad)
 clusters["cluster"].nunique()       # 4, the estimated k
 
 # 4. score it against the reference annotation
@@ -37,20 +33,23 @@ ax = kdb.pl.plot_spatial(clusters, h5ad, title="SpaGCN")
 ax.figure.savefig("spagcn.png", dpi=150, bbox_inches="tight")
 ```
 
-1. [Discover methods](tutorials/discover.md) covers the method table and how each method picks k.
-2. [Run a method](tutorials/run.md) covers the arguments, the run folder, the input file and
-   the GPU.
-3. [Evaluate a run](tutorials/evaluate.md) covers what each score measures and how to compare
-   many runs.
+Each step has its own page:
+
+* Step 1: [Discover methods](tutorials/discover.md), the method table and how each method picks k.
+* Step 3: [Run a method](tutorials/run.md), the arguments, the run folder, the input file and
+  the GPU.
+* Step 4: [Evaluate a run](tutorials/evaluate.md), what each score measures and how to compare
+  many runs.
+* Step 5: [Figures](reference/plot.md), every plot and its options.
 
 ## Command line
 
-The same steps without Python:
+Steps 1, 3 and 4 from the shell:
 
 ```bash title="terminal"
-kdomainbench methods
-kdomainbench run -m SpaGCN -i data/D3_151509_5k.h5ad -k 30 -d cpu
-kdomainbench summarize --csv summary.csv --plot k.png
+kdomainbench methods                                     # the method table
+kdomainbench run -m SpaGCN -i data/D3_151509_5k.h5ad     # writes kdb_results/SpaGCN/D3_151509_5k_cpu/
+kdomainbench summarize --csv summary.csv --plot k.png    # scores every run, saves the table and the k figure
 ```
 
 ## Next steps
@@ -89,7 +88,8 @@ ARI, NMI
 
 `kmax`
 :   The largest k a method may consider, 30 by default. Most methods try k = 2 … `kmax`
-    and pick one.
+    and pick one. DeepST and SpaGCN ignore it, and BNPSpace only starts from it
+    ([How each method picks k](tutorials/discover.md#how-each-method-picks-k)).
 
 device
 :   `"cpu"` or `"gpu"`. Only CellCharter, DeepST and SpatialDE2 can use a GPU.

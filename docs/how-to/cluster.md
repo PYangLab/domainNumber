@@ -1,7 +1,7 @@
 # Run on a cluster
 
-This guide installs kDomainBench on a shared Linux cluster and runs each method as its own
-batch job. The examples use Slurm.
+This guide adapts [Installation](../installation.md) to a shared Linux cluster and runs each
+method as its own batch job. The examples use Slurm.
 
 ## 1. Install where there is internet
 
@@ -9,7 +9,9 @@ Create the environments in a project folder, which usually has more space than y
 folder:
 
 ```bash title="terminal"
+module load R                                    # if R comes as a module
 KDB_ENVS_DIR=/project/envs bash envs/install_envs.sh
+Rscript envs/install_r_packages.R                # the R packages, into your R
 /project/envs/kdb_py/bin/kdomainbench check
 ```
 
@@ -39,10 +41,8 @@ for m in PRECAST SC.MEB BayesSpace BNPSpace DR.SC iSC.MEB \
 done
 ```
 
-This memory fits a sample of about 4,000 spots for most methods ([Memory](#memory) lists what
-each needed). The memory reported there is that of a method's largest process, so give more to
-iSC.MEB, which starts 10 workers, and to PRECAST, which starts 4 (`PRECAST_CORES`). A job that reaches its time limit is stopped together with the method, and
-its `run_info.json` records `"success": false`.
+iSC.MEB starts 10 workers and PRECAST 4 (`PRECAST_CORES`). A job that reaches its time limit is
+stopped together with the method, and its `run_info.json` records `"success": false`.
 
 ## 3. Use a GPU
 
@@ -64,23 +64,3 @@ When the jobs are done:
 ```bash title="terminal"
 /project/envs/kdb_py/bin/kdomainbench summarize results/ --csv summary.csv --plot k.png
 ```
-
-## Memory
-
-The peak memory of one CPU run of each method with `kmax = 30` on sample 151507 of the same
-study as the example data (4,220 spots, 9,948 genes):
-
-| Method | Peak memory (GB) |
-|---|---:|
-| SpaGCN | 1.4 |
-| CellCharter | 2.0 |
-| DR.SC | 2.3 |
-| SC.MEB | 2.6 |
-| SpatialDE2 | 2.8 |
-| DeepST | 2.9 |
-| iSC.MEB | 2.9 |
-| PRECAST | 3.4 |
-| BNPSpace | 5.2 |
-| BayesSpace | 11.7 |
-
-This is the peak memory of the method's largest process.

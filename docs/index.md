@@ -69,7 +69,7 @@ clusters = kdb.run("SpaGCN", "sample.h5ad")
 [<span class="lp-card-kicker">Run</span><span class="lp-card-title">Run a method</span><span class="lp-card-desc">Run any of the ten methods on an <code>.h5ad</code> file, each in the environment it needs.</span>](tutorials/run.md){ .lp-card-cover }
 </div>
 <div class="lp-card lp-card-link" markdown="span">
-[<span class="lp-card-kicker">Benchmark</span><span class="lp-card-title">Benchmark the ten methods</span><span class="lp-card-desc">Run all ten methods on one sample, then compare k error, ARI, domains and cost.</span>](tutorials/benchmark.md){ .lp-card-cover }
+[<span class="lp-card-kicker">Benchmark</span><span class="lp-card-title">Benchmark the ten methods</span><span class="lp-card-desc">Run all ten methods on one sample, then compare k error, ARI, the domains and the twelve metrics.</span>](tutorials/benchmark.md){ .lp-card-cover }
 </div>
 <div class="lp-card lp-card-link" markdown="span">
 [<span class="lp-card-kicker">Your data</span><span class="lp-card-title">Your own data</span><span class="lp-card-desc">From a Space Ranger folder to domains on the tissue, with or without an annotation.</span>](how-to/own_data.md){ .lp-card-cover }

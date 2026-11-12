@@ -17,11 +17,13 @@ def __dir__():          # tab completion of kdb.pl shows the plots, not the impo
     return __all__
 
 
-def _successful(summary):
-    _check_table(summary)
-    if summary.empty or not summary["success"].astype(bool).any():
+def _successful(summary, *columns):
+    """The successful runs of ``summary``, which must be the table of load_results with these columns."""
+    _check_table(summary, *columns)
+    done = summary["success"].astype(bool)      # astype: the column of an empty table is not boolean
+    if not done.any():
         raise ValueError("no successful runs in the summary table. Check the folder given to load_results")
-    return summary[summary["success"].astype(bool)]
+    return summary[done]
 
 
 def plot_k_estimates(summary, ax=None, k_reference=None):
@@ -51,6 +53,8 @@ def plot_k_estimates(summary, ax=None, k_reference=None):
     ------
     TypeError
         ``summary`` is not a table.
+    KeyError
+        ``summary`` lacks a column of the [load_results][kdomainbench.load_results] table.
     ValueError
         ``summary`` has no successful run.
 
@@ -67,36 +71,38 @@ def plot_k_estimates(summary, ax=None, k_reference=None):
 
     Examples
     --------
+    >>> summary = kdb.load_results("kdb_results")
     >>> ax = kdb.pl.plot_k_estimates(summary)
     >>> ax.figure.savefig("k_estimates.png", dpi=150, bbox_inches="tight")
     """
-    ok = _successful(summary)
+    ok = _successful(summary, "k_estimated")
     k = ok["k_estimated"].astype(float)
-    dev = (k - (ok.get("k_reference", np.nan) if k_reference is None else k_reference)).astype(float)
-    scored = dev.notna()
+    error = (k - (ok.get("k_reference", np.nan) if k_reference is None else k_reference)).astype(float)
+    scored = error.notna()
     if scored.any():                                    # then the figure is about the runs with a reference
-        ok, k, dev = ok[scored], k[scored], dev[scored]
-    references = (k - dev).dropna().unique()
+        ok, k, error = ok[scored], k[scored], error[scored]
+    references = (k - error).dropna().unique()          # of the runs, from the column or from k_reference
     several = len(references) > 1                       # then only the k error is comparable
-    runs = ok.assign(x=dev if several else k, side=np.sign(dev))
+    runs = ok.assign(x=error if several else k, side=np.sign(error))
     order = list(runs.groupby("method")["x"].median().sort_values(kind="stable").index)
     dots = runs.groupby(["method", "x"], as_index=False).agg(side=("side", "first"), runs=("x", "size"))
     most = dots["runs"].max()
-    area = (60 if most == 1 else 170) / most            # of one run: the largest dot fits its row
+    area = (60 if most == 1 else 170) / most            # of one run, in points squared: the largest dot fits its row
     sides = {-1: ("#3A6BA5", "fewer domains"), 0: ("#659B72", "as many domains"), 1: ("#C65A36", "more domains")}  # Fig. 2b
     ax = ax or plt.subplots(figsize=(5.2, 0.3 * len(order) + 1.2))[1]
     ax.scatter(dots["x"], dots["method"].map(order.index), s=area * dots["runs"], zorder=3, edgecolors="black",
                linewidths=0.6, c=[sides[s][0] if s in sides else "0.55" for s in dots["side"]])
     marks, handles, names = list(dots["x"]), [], []
     if len(references):
-        marks.append(0 if several else references[0])
-        handles.append(ax.axvline(marks[-1], ls="--", lw=1, color="0.45", zorder=1))
+        line = 0 if several else references[0]
+        marks.append(line)
+        handles.append(ax.axvline(line, ls="--", lw=1, color="0.45", zorder=1))
         names.append("estimated k = reference k" if several else f"reference domain number ({references[0]:g})")
         for side in sorted(set(dots["side"])):          # what the colors mean
             handles.append(Line2D([], [], ls="", marker="o", ms=7, mfc=sides[side][0], mec="black", mew=0.6))
             names.append(sides[side][1])
     if most > 1:                                        # what the dot areas mean
-        for n in sorted({1, int(most)}):
+        for n in (1, int(most)):
             handles.append(ax.scatter([], [], s=area * n, color="0.8", edgecolors="black", linewidths=0.6))
             names.append("1 run" if n == 1 else f"{n} runs")
     if handles:
@@ -156,6 +162,8 @@ def plot_metrics(summary, ax=None):
     ------
     TypeError
         ``summary`` is not a table.
+    KeyError
+        ``summary`` lacks a column of the [load_results][kdomainbench.load_results] table.
     ValueError
         ``summary`` has no successful run, or none of its runs has a metric value.
 
@@ -186,13 +194,19 @@ def plot_metrics(summary, ax=None):
                          "or from the shell: kdomainbench metrics <folder>")
     methods = list(dict.fromkeys(ok["method"]))
     y = np.arange(len(methods))[::-1]                           # the first method on top
-    width, x = 0.84, 0                                          # of a bar's cell, and its left edge
-    right = sum(len(ms) for _, ms in groups.values()) + 0.6 * (len(groups) - 1) - 0.08
-    ax = ax or plt.subplots(figsize=(0.52 * max(right, 7.4) + 1.2, 0.3 * len(methods) + 2.4))[1]
-    ax.barh(y[1::2], right + 0.16, left=-0.08, height=1, color="#F0F0F0", zorder=0)     # every second row
+    # Layout, in data units. x: one unit per metric, of which a bar's cell takes `width`, and `gap` more
+    # between two groups. y: one unit per method. Above the matrix: the arrows (top + 0.36) and the group
+    # titles (from top + 0.75). Below it: each metric's axis (-0.8), its tick labels (-1.0) and its name
+    # (from -1.55), then the key (from -3.4). When one of these moves, set_ylim at the end must follow.
+    width, gap, pad = 0.84, 0.6, 0.08       # of a cell (and the thickness of a bar), between groups, around the matrix
+    x = 0                                   # the left edge of the next cell
+    right = sum(len(ms) for _, ms in groups.values()) + gap * (len(groups) - 1) - pad
+    shades = {g: LinearSegmentedColormap.from_list(g, ["#F7F7F7", color]) for g, (color, _) in groups.items()}
+    key_width = 7.4                         # of the key below the matrix, which a narrow matrix must not cut
+    ax = ax or plt.subplots(figsize=(0.52 * max(right, key_width) + 1.2, 0.3 * len(methods) + 2.4))[1]
+    ax.barh(y[1::2], right + 2 * pad, left=-pad, height=1, color="#F0F0F0", zorder=0)     # every second row
     top, whiskers = len(methods) - 0.5, False
     for g, (color, ms) in groups.items():
-        shade = LinearSegmentedColormap.from_list(g, ["#F7F7F7", color])
         more = 0.3 * (len(ms) == 1)                             # a title is wider than one column
         ax.add_patch(FancyBboxPatch((x - more, top + 0.75), len(ms) - 1 + width + 2 * more, 0.95, fc=color, ec="none",
                                     boxstyle="round,pad=0,rounding_size=0.15", clip_on=False))
@@ -204,16 +218,18 @@ def plot_metrics(summary, ax=None):
             mean, sd = runs.mean().reindex(methods).round(12), runs.std().reindex(methods)
             lower = m in _LOWER_IS_BETTER
             rank = (mean if lower else -mean).rank(method="min")
-            fill = shade(1 - (rank - 1) / max(rank.count() - 1, 1))
+            fill = shades[g](1 - (rank - 1) / max(rank.count() - 1, 1))
             spread = sd.fillna(0)
             lo, hi = min((mean - spread).min(), 0), _axis_top((mean + spread).max())
-            at = lambda v: x + width * (v - lo) / (hi - lo)     # noqa: E731  the metric's axis inside its cell
+
+            def at(v):                                          # where a value lies on the metric's axis, inside its cell
+                return x + width * (v - lo) / (hi - lo)
             has = mean.notna().to_numpy()
             ax.barh(y[has], (at(mean) - at(0))[has], left=at(0), height=width, color=fill[has],
                     edgecolor="black", linewidth=0.6, zorder=2)
             several = sd.notna().to_numpy()
             whiskers = whiskers or several.any()
-            ax.errorbar(at(mean)[several], y[several], xerr=(width * sd / (hi - lo))[several], fmt="none",
+            ax.errorbar(at(mean)[several], y[several], xerr=(at(mean + sd) - at(mean))[several], fmt="none",
                         ecolor="black", elinewidth=0.8, capsize=2, zorder=3)
             for row in y[~has]:
                 ax.text(x + width / 2, row, "n/a", ha="center", va="center", fontsize="x-small", color="0.45")
@@ -225,21 +241,28 @@ def plot_metrics(summary, ax=None):
             ax.text(x + width, -1.0, f"{hi:g}", ha="right", va="top", fontsize="x-small")
             ax.text(x + width / 2, -1.55, m, ha="right", va="top", rotation=45, rotation_mode="anchor")
             x += 1
-        x += 0.6
-    ax.add_patch(Rectangle((-0.08, -0.5), right + 0.16, len(methods), fill=False, ec="black", lw=0.6, zorder=4))
+        x += gap
+    ax.add_patch(Rectangle((-pad, -0.5), right + 2 * pad, len(methods), fill=False, ec="black", lw=0.6, zorder=4))
     # the key, below the matrix: one ramp per group, then the arrows and the whisker
     ax.text(0, -3.4, "Rank among the methods", va="center", fontsize="small", fontweight="bold")
-    for i, (g, (color, _)) in enumerate(groups.items()):
+    for i, g in enumerate(groups):
         ax.pcolormesh(np.linspace(0, 3, 51), [-3.98 - 0.3 * i, -3.76 - 0.3 * i], np.linspace(0, 1, 50)[None],
-                      cmap=LinearSegmentedColormap.from_list(g, ["#F7F7F7", color]), rasterized=True)
-    ax.text(0, -4.1 - 0.3 * i, "worst", ha="left", va="top", fontsize="small")
-    ax.text(3, -4.1 - 0.3 * i, "best", ha="right", va="top", fontsize="small")
+                      cmap=shades[g], rasterized=True)
+    below = -3.8 - 0.3 * len(groups)                            # under the last ramp
+    ax.text(0, below, "worst", ha="left", va="top", fontsize="small")
+    ax.text(3, below, "best", ha="right", va="top", fontsize="small")
     shown = {m for _, ms in groups.values() for m in ms}
-    notes = ["↑  higher is better"] * bool(shown - _LOWER_IS_BETTER) + ["↓  lower is better"] * bool(shown & _LOWER_IS_BETTER)
-    notes += ["bar: mean over the runs", "whisker: standard deviation"] if whiskers else ["bar: value of the metric"]
-    for i, note in enumerate(notes):
-        ax.text(3.9, -3.4 - 0.55 * i, note, va="center", fontsize="small", color="#C0392B" if note[0] == "↓" else "black")
-    ax.set_xlim(-0.08, max(right + 0.08, 7.4))
+    notes = []                                                  # (text, color)
+    if shown - _LOWER_IS_BETTER:
+        notes.append(("↑  higher is better", "black"))
+    if shown & _LOWER_IS_BETTER:
+        notes.append(("↓  lower is better", "#C0392B"))
+    notes.append(("bar: mean over the runs" if whiskers else "bar: value of the metric", "black"))
+    if whiskers:
+        notes.append(("whisker: standard deviation", "black"))
+    for i, (text, color) in enumerate(notes):
+        ax.text(3.9, -3.4 - 0.55 * i, text, va="center", fontsize="small", color=color)
+    ax.set_xlim(-pad, max(right + pad, key_width))
     ax.set_ylim(min(-4.35 - 0.3 * len(groups), -3.15 - 0.55 * len(notes)), top + 1.75)
     ax.set_yticks(y, methods)
     ax.set_xticks([])
@@ -277,12 +300,22 @@ def plot_runtime(summary, metric="wall_time_s", ax=None, log=True):
     ValueError
         ``summary`` has no successful run, or none with a value in ``metric``.
 
+    Notes
+    -----
+    * A bar is the mean over the runs of a method on one device (``device_used``). A method
+      without GPU code has only a CPU bar, also for runs made with ``device="gpu"``.
+    * Methods are sorted by their mean over the devices, the smallest first.
+
     Examples
     --------
+    >>> summary = kdb.load_results("kdb_results")
     >>> kdb.pl.plot_runtime(summary)
     >>> kdb.pl.plot_runtime(summary, metric="peak_rss_mb", log=False)
     """
-    ok = _successful(summary)
+    ok = _successful(summary, "device_used")
+    if metric not in ok:
+        raise KeyError(f"summary has no column {metric!r}: metric= names a numeric column of the table, "
+                       f"for example 'wall_time_s' or 'peak_rss_mb'")
     if not ok[metric].notna().any():
         raise ValueError(f"no successful run has a value in {metric!r}")
     tab = ok.pivot_table(index="method", columns="device_used", values=metric, aggfunc="mean")
@@ -329,6 +362,8 @@ def plot_spatial(clusters, h5ad, ax=None, title=None, s=8, spatial_key="spatial"
 
     Raises
     ------
+    FileNotFoundError
+        The run folder or the ``.h5ad`` file is missing.
     KeyError
         ``obsm`` has no ``spatial_key``.
     TypeError
@@ -351,7 +386,7 @@ def plot_spatial(clusters, h5ad, ax=None, title=None, s=8, spatial_key="spatial"
     # natural order: 2 before 10, Layer1 ... Layer6 before WM
     cats = sorted(lab.dropna().unique(), key=lambda x: [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", x)])
     colors = plt.get_cmap("tab10").colors
-    if len(cats) > 10:                          # 40 distinct colours: enough for kmax = 30
+    if len(cats) > 10:                          # 40 distinct colors: enough for kmax = 30
         colors = plt.get_cmap("tab20").colors + plt.get_cmap("tab20b").colors
     for i, c in enumerate(cats):
         sel = (lab == c).to_numpy()
@@ -390,6 +425,10 @@ def plot_spatial_grid(results, h5ad, ncols=5, s=4, spatial_key="spatial"):
 
     Raises
     ------
+    FileNotFoundError
+        A run folder or the ``.h5ad`` file is missing.
+    KeyError
+        ``obsm`` has no ``spatial_key``.
     TypeError
         ``results`` is not a dict of runs.
     ValueError
@@ -399,6 +438,13 @@ def plot_spatial_grid(results, h5ad, ncols=5, s=4, spatial_key="spatial"):
     --------
     >>> results = kdb.run_all("data/D3_151509_5k.h5ad")
     >>> kdb.pl.plot_spatial_grid(results, "data/D3_151509_5k.h5ad").savefig("domains.png")
+
+    For finished runs:
+
+    >>> summary = kdb.load_results("kdb_results")
+    >>> ok = summary[summary["success"]]
+    >>> runs = dict(zip(ok["method"], ok["out_dir"]))
+    >>> fig = kdb.pl.plot_spatial_grid(runs, "data/D3_151509_5k.h5ad")
     """
     if not isinstance(results, dict):
         raise TypeError(f"results must be {{name: clusters}}, as kdb.run_all returns, not a {type(results).__name__}")
@@ -409,7 +455,7 @@ def plot_spatial_grid(results, h5ad, ncols=5, s=4, spatial_key="spatial"):
     fig, axes = plt.subplots(nrows, ncols, figsize=(3 * ncols, 3 * nrows), squeeze=False)
     for ax, (name, cl) in zip(axes.flat, results.items()):
         labels = _labels(cl)
-        plot_spatial(labels, h5ad, ax=ax, s=s, title=f"{name} (k={labels.nunique()})", spatial_key=spatial_key)
+        plot_spatial(labels, h5ad, ax=ax, s=s, title=f"{name} (k = {labels.nunique()})", spatial_key=spatial_key)
     for ax in list(axes.flat)[n:]:
         ax.axis("off")
     fig.tight_layout()

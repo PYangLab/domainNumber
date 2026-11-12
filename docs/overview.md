@@ -6,7 +6,7 @@ is the number of distinct labels in that file.
 
 ## One call, three environments
 
-The methods need incompatible software: R 4.4 with Bioconductor, PyTorch with PyG, and
+The methods need incompatible software: R 4.4 with Bioconductor, PyTorch, and
 TensorFlow 2.15. So they run in three environments, and `kdb.run` starts each method in the
 right one:
 
@@ -35,16 +35,13 @@ Each method has **one** script for both devices, and the device is a command-lin
 
 The settings apply to the method's process only. `run_info.json` records both
 `device_requested` and `device_used`, the device the method was started with. They differ only
-for a CPU-only method asked to use the GPU. kDomainBench does not measure which device the
-method ended up on ([GPU or CPU?](tutorials/run.md#gpu-or-cpu)).
+for a CPU-only method asked to use the GPU ([GPU or CPU?](tutorials/run.md#gpu-or-cpu)).
 
 ## Scores and metrics
 
 Scoring is separate from running. `kdb.evaluate` computes k error, ARI and NMI in Python.
-`kdb.metrics` computes the twelve metrics of the paper with the paper's own code: `metrics.R`
-for eleven of them, in R, and `scs.py` for SCS, in `kdb_py`. Both files in
-`src/kdomainbench/metric_scripts/` are unchanged copies of the scripts that scored the paper's
-benchmark ([The twelve metrics of the paper](tutorials/evaluate.md#the-twelve-metrics-of-the-paper)).
+`kdb.metrics` computes the twelve metrics of the paper with the paper's own code, in R and in
+`kdb_py` ([The twelve metrics of the paper](tutorials/evaluate.md#the-twelve-metrics-of-the-paper)).
 
 ## The ten methods
 
@@ -76,8 +73,6 @@ The scripts in `src/kdomainbench/methods/` are copies of the scripts that ran th
 benchmark, with only these changes:
 
 * `run_cellcharter.py`, `run_deepst.py`, `run_spatialde.py`: a `--device cpu|gpu` flag sets the
-  device. The original CellCharter and DeepST scripts always asked for GPU 0
-  (`CUDA_VISIBLE_DEVICES="0"`, `use_gpu=True`), and the original SpatialDE2 script set no
   device.
 * `run_spagcn.py`: hides the GPUs (`CUDA_VISIBLE_DEVICES=""`), so SpaGCN always runs on the CPU.
 * `bnpspace.R`: finds its helper R and C++ sources through `KDB_METHODS_DIR`, set by
@@ -85,13 +80,10 @@ benchmark, with only these changes:
 * `bayesspace.R`: copies `array_row` / `array_col` into `row` / `col`. BayesSpace 1.14 reads
   `row` / `col`, and versions from 1.16 read `array_row` / `array_col`. Both end up with the
   same coordinates.
-* `scmeb.R`: runs SC.MEB serially (`parallel = FALSE`), so that it uses `set.seed(114)`. The
-  original runs each k in a parallel worker that does not inherit the seed, and two such runs
-  on the same data returned k = 7 and k = 9. `SCMEB_PARALLEL=TRUE` (with
-  `SCMEB_CORES` workers, default 3) restores the original setting.
-* `drsc.R`: no longer copies `obs["clusters"]` into its Seurat object. DR.SC never used the
-  column, and the script failed on a file without it. The domains are the same with and without
-  the line.
+* `scmeb.R`: runs SC.MEB serially (`parallel = FALSE`). `SCMEB_PARALLEL=TRUE` runs it with
+  `SCMEB_CORES` parallel workers (default 3).
+* `drsc.R`: no longer needs `obs["clusters"]`, which DR.SC does not use, so it runs on a file
+  without an annotation.
 * The Python scripts have a `run_` prefix. Without it, `cellcharter.py` would import itself
   instead of the `cellcharter` package.
 

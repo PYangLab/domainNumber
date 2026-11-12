@@ -61,14 +61,18 @@ def domain_maps(ok, h5ad):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        sys.exit(__doc__)
     root, h5ad = sys.argv[1], sys.argv[2]
     summary = kdb.load_results(root)
     summary = summary[(summary["dataset"] == Path(h5ad).stem) & (summary["device_requested"].fillna("cpu") == "cpu")]
     ok = summary[summary["success"]]
-    (REPO / "snippets" / "results_table.md").write_text(table(summary))
+    text = table(summary)
+    (REPO / "snippets" / "results_table.md").write_text(text)
     summary_figures(ok)
     domain_maps(ok, h5ad)
     # local paths, run times and columns without any value stay out of the published table
+    # (runs without a time record have no `started` column)
     hidden = ["h5ad", "out_dir", "wall_time_s", "started"]
     summary.drop(columns=hidden, errors="ignore").dropna(axis=1, how="all").to_csv(ASSETS / "summary_5k.csv", index=False)
-    print(table(summary))
+    print(text)

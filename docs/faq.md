@@ -4,14 +4,8 @@ Error messages and their fixes are under [Troubleshooting](how-to/troubleshootin
 
 ## Do I need a GPU?
 
-No. All ten methods run on a CPU. CellCharter, DeepST and SpatialDE2 can use a GPU, and a GPU
-run can give a different result ([GPU or CPU?](tutorials/run.md#gpu-or-cpu)).
-
-## How much memory does a run need?
-
-It depends on the method and on the number of spots.
-[Run on a cluster](how-to/cluster.md#memory) lists the peak memory of each method on a sample of
-4,220 spots.
+No. All ten methods run on a CPU. CellCharter, DeepST and SpatialDE2 can also use a GPU
+([GPU or CPU?](tutorials/run.md#gpu-or-cpu)).
 
 ## My sample has no annotation. Can I still use kDomainBench?
 
@@ -20,37 +14,31 @@ annotation. [Your own data](how-to/own_data.md) walks through it.
 
 ## The methods give different k. Which one is right?
 
-No single run tells you. On sample 151509 the ten methods disagree widely
-([Benchmark the ten methods](tutorials/benchmark.md#3-estimated-k-and-accuracy)).
+No single run tells you.
 [The methods will disagree](how-to/own_data.md#the-methods-will-disagree) says how to read
 their estimates.
 
 ## Does it work for mouse, or for another tissue?
 
 Yes. No method takes the species or the tissue as a setting. Each reads only the count matrix
-and the spot coordinates of a 10x Visium sample. One step depends on gene names: SpaGCN drops
-the genes whose names start with `MT-` or `ERCC`, which catches human mitochondrial genes but
-not mouse ones (`mt-`). The results on this site are from one human brain sample.
+and the spot coordinates of a 10x Visium sample. The results on this site are from human brain
+samples of one study.
 
 ## Can I use Jupyter?
 
-Yes, with `kdb_py` as the kernel. `kdb_py` has the kernel package but no Jupyter server, so
-use the Jupyter you already have on the Linux machine where the methods run, for example
-JupyterLab, or a JupyterHub or Open OnDemand service of your cluster. Register `kdb_py` with it once, then pick the kernel
-`kdb_py` in Jupyter:
+Yes, with `kdb_py` as the kernel. `kdb_py` has no Jupyter server, so use the Jupyter of the
+Linux machine where the methods run (JupyterLab, JupyterHub or Open OnDemand). Register `kdb_py`
+with it once, then pick it as the kernel:
 
 ```bash title="terminal"
 conda run -n kdb_py python -m ipykernel install --user --name kdb_py
 ```
 
+For environments made with `KDB_ENVS_DIR`, name `kdb_py` by its path:
+`conda run -p /project/envs/kdb_py ...`.
+
 When Jupyter does not see the R on your `PATH`, name it at the top of the notebook with
 `kdb.set_env("r", "/path/to/Rscript")`.
-
-## Will I get the same result twice?
-
-On the same machine, mostly. The scripts fix a random seed for every method except iSC.MEB
-([Method scripts](overview.md#method-scripts)). Results can still change with the device and,
-for the R methods, with the package versions in your R.
 
 ## Can I score labels from another tool?
 
@@ -63,6 +51,9 @@ import kdomainbench as kdb
 labels = pd.read_csv("my_labels.csv", index_col=0).iloc[:, 0]      # barcode, label
 kdb.evaluate(labels, "data/D3_151509_5k.h5ad")
 ```
+
+`n_spots_scored` in the result must equal your number of spots. A smaller number means that
+some barcodes did not match.
 
 ## Can I add a method?
 

@@ -36,9 +36,9 @@ Two more checks need more than a laptop:
   about 4 minutes.
 * `python scripts/check_docs.py --h5ad data/D3_151509_5k.h5ad --reuse <finished runs> --work <scratch folder>`
   runs the code examples of the pages it lists and of the docstrings (not the home page, and
-  not `kdb.metrics`, which the first check covers). It needs Linux with the environments and
-  takes about an hour. It checks that each example runs, not that it prints the output the
-  page shows.
+  not the docstring example of `kdb.metrics`, which the first check covers). It needs Linux
+  with the environments and takes about an hour. It checks that each example runs, not that
+  it prints the output the page shows.
 
 Add a line to `CHANGELOG.md`, under "Unreleased", for every change a user notices.
 

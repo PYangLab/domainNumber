@@ -10,12 +10,15 @@ import time
 import warnings
 from pathlib import Path
 
+import matplotlib
 import pandas as pd
 import pytest
 
 import kdomainbench as kdb
 from kdomainbench import cli, config, runner
 from kdomainbench.registry import get_method
+
+matplotlib.use("Agg")                   # figures are drawn into memory, never shown
 
 # The method scripts are the paper's, with only the changes listed in docs/overview.md,
 # "Method scripts". A change to a script needs an entry there and its new checksum here.
@@ -113,7 +116,7 @@ def test_environment_next_to_the_running_one_is_found(tmp_path, monkeypatch):
     assert config.interpreter("spatialde") == str(tmp_path / "kdb_spatialde" / "bin" / "python")
 
 
-def test_rscript_is_found_on_path_or_named(tmp_path, monkeypatch):
+def test_rscript_is_found_on_path_and_its_packages_are_listed(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "_overrides", {})
     for var in ("KDB_RSCRIPT", "KDB_METRICS_RSCRIPT"):
         monkeypatch.delenv(var, raising=False)
@@ -125,6 +128,22 @@ def test_rscript_is_found_on_path_or_named(tmp_path, monkeypatch):
     assert config.interpreter("metrics") == config.interpreter("r") == str(tmp_path / "Rscript")
     runner._write_packages(str(tmp_path / "Rscript"), "R", tmp_path, {"PATH": str(tmp_path)})
     assert (tmp_path / "packages.txt").read_text() == "Package,Version\n"
+
+
+def test_set_env_and_the_isolated_r_library(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "_overrides", {})
+    for var in ("KDB_PY_PYTHON", "KDB_R_LIB"):
+        monkeypatch.delenv(var, raising=False)
+    kdb.set_env("py", sys.executable, r_lib=tmp_path)
+    assert config.interpreter("py") == sys.executable
+    env = config.child_env("R")
+    assert env["R_LIBS"] == str(tmp_path) and env["R_LIBS_USER"] == env["R_LIBS_SITE"] == "/nonexistent"
+    assert "R_LIBS" not in config.child_env("Python")
+    monkeypatch.setenv("KDB_PY_PYTHON", str(tmp_path / "no" / "python"))     # the variable wins
+    with pytest.raises(FileNotFoundError, match="KDB_PY_PYTHON"):
+        config.interpreter("py")
+    with pytest.raises(ValueError, match="must be one of"):
+        kdb.set_env("julia", sys.executable)
 
 
 # ---- running ------------------------------------------------------------------------------
@@ -184,9 +203,11 @@ def test_run_reads_the_labels_and_records_the_run(tmp_path, monkeypatch):
     assert clusters["cluster"].tolist() == ["0", "1"]       # the spot without a label is no domain
     summary = kdb.load_results(tmp_path, score=False)
     assert summary.loc[0, "k_estimated"] == 2 and summary.loc[0, "n_spots"] == 2
-    assert summary.loc[0, "peak_rss_mb"] < 1e5
+    assert summary.loc[0, "peak_rss_mb"] < 1e5          # MB: not the bytes (macOS) or KB (Linux) of ru_maxrss
     with pytest.warns(UserWarning, match="no successful run could be scored"):
         assert kdb.k_accuracy(summary).empty      # no reference annotation: nothing to rank, no error
+    with pytest.warns(UserWarning, match="no successful run could be scored$"):      # a table made by hand
+        assert kdb.k_accuracy(summary.drop(columns="score_error")).empty
     info = json.loads((tmp_path / "o" / "SpaGCN" / "x_cpu" / "run_info.json").read_text())
     assert info["kdomainbench"] == kdb.__version__ and info["env"]["KDB_METHODS_DIR"] == str(runner.METHODS_DIR)
     assert "pandas==" in (tmp_path / "o" / "SpaGCN" / "x_cpu" / "packages.txt").read_text()
@@ -336,9 +357,16 @@ def test_cli_run_uses_one_folder_layout_and_reports_failures(tmp_path, monkeypat
     monkeypatch.setattr(kdb, "run_all", fake_run_all)
     cli.main(["run", "-m", "drsc", "-i", "x.h5ad", "-o", str(tmp_path)])
     assert calls[-1] == (["DR.SC"], str(tmp_path))
+    cli.main(["run", "-m", "DR.SC", "drsc", "-i", "x.h5ad"])    # named twice: run once, and counted once
+    assert calls[-1][0] == ["DR.SC"]
     with pytest.raises(SystemExit) as stop:                     # SC.MEB did not finish
         cli.main(["run", "-m", "DR.SC", "SC.MEB", "-i", "x.h5ad"])
     assert calls[-1] == (["DR.SC", "SC.MEB"], "kdb_results") and stop.value.code not in (0, None)
+    with pytest.raises(SystemExit):                             # all, in any case: nine of ten did not finish
+        cli.main(["run", "-m", "ALL", "-i", "x.h5ad"])
+    assert calls[-1][0] is None
+    with pytest.raises(SystemExit, match="unknown method 'Nope'"):          # the name as it was typed
+        cli.main(["run", "-m", "Nope", "-i", "x.h5ad"])
 
 
 @pytest.mark.parametrize("flags", [[], ["--gpu"]])
@@ -359,6 +387,14 @@ def test_check_looks_for_every_package_the_r_scripts_load():
     packages = cli._r_packages()
     assert {"PRECAST", "SC.MEB", "BayesSpace", "DR.SC", "iSC.MEB", "zellkonverter",   # the methods
             "flexclust", "scran", "RcppArmadillo"} <= set(packages)                    # BNPSpace's helpers
+
+
+def test_a_gpu_method_is_told_its_device(tmp_path, monkeypatch):
+    seen = _capture_launch(monkeypatch)
+    (tmp_path / "x.h5ad").touch()
+    with pytest.raises(_Stop):
+        kdb.run("DeepST", tmp_path / "x.h5ad", device="gpu", out_root=tmp_path, verbose=False)
+    assert seen["cmd"][-2:] == ["--device", "gpu"]
 
 
 # ---- scoring ------------------------------------------------------------------------------
@@ -428,11 +464,55 @@ def test_load_results_scores_against_a_moved_input_file(tmp_path):
         kdb.load_results(tmp_path / "runs", h5ad=tmp_path / "here.h5ad")
 
 
+def test_natural_inputs_are_accepted(tmp_path):
+    adata = _sample(tmp_path / "s.h5ad")
+    run = _finished_run(tmp_path / "runs", tmp_path / "s.h5ad")
+    for clusters in (run, str(run), kdb.read_clusters(run)):
+        for reference in (tmp_path / "s.h5ad", adata, kdb.reference_annotation(adata), run, kdb.read_clusters(run)):
+            assert kdb.evaluate(clusters, reference)["ARI"] == 1.0     # the last two: another run
+    with pytest.raises(TypeError, match="without a 'cluster' column"):
+        kdb.evaluate(kdb.load_results(tmp_path / "runs"), adata)
+    with pytest.raises(ValueError, match="not an .h5ad file"):              # a run's csv is no reference file
+        kdb.evaluate(run, run / "cluster_results.csv")
+    with pytest.raises(KeyError, match="its columns: clusters"):
+        kdb.reference_annotation(adata, reference_key="layer")
+    with pytest.raises(ValueError, match="is an input file"):
+        kdb.read_clusters(tmp_path / "s.h5ad")
+    with pytest.raises(FileNotFoundError, match="not a run folder"):
+        kdb.metrics(tmp_path)
+    with pytest.raises(FileNotFoundError, match="reads one run folder"):    # the results folder, not a run folder
+        kdb.read_clusters(tmp_path / "runs")
+    failed = _finished_run(tmp_path / "runs", tmp_path / "s.h5ad", method="SC.MEB", success=False)
+    (failed / "cluster_results.csv").unlink()                               # as a run that stopped leaves it
+    with pytest.raises(FileNotFoundError, match="the run did not finish, see .*run.log"):
+        kdb.read_clusters(failed)
+
+
+def test_load_results_keeps_its_columns_and_refuses_a_missing_folder(tmp_path):
+    with pytest.raises(FileNotFoundError, match="no such folder"):
+        kdb.load_results(tmp_path / "typo")
+    (tmp_path / "empty").mkdir()
+    empty = kdb.load_results(tmp_path / "empty")
+    assert empty.empty and {"k_reference", "k_error", "ARI", "NMI", "score_error"} <= set(empty)
+    with pytest.raises(TypeError, match="table from kdb.load_results"):
+        kdb.k_accuracy(str(tmp_path))
+    with pytest.raises(KeyError, match="no column 'success'.*whole table"):   # a selection of its columns
+        kdb.k_accuracy(empty[["method", "k_error"]])
+    with pytest.raises(FileNotFoundError, match="input file not found"):      # an h5ad= that is not there
+        kdb.load_results(tmp_path / "empty", h5ad=tmp_path / "typo.h5ad")
+
+
+def test_k_accuracy_ranks_by_k_error_then_ari():
+    summary = pd.DataFrame(dict(method=["A", "A", "B", "C", "D"], success=[True, True, True, True, False],
+                                k_reference=[7, 7, 7, 7, 7], k_error=[0, -2, 1, -1, 0], ARI=[0.5, 0.3, 0.2, 0.6, 0.9]))
+    acc = kdb.k_accuracy(summary)
+    assert list(acc.index) == ["C", "A", "B"]         # |error| 1 and ARI 0.6 before |error| 1 and ARI 0.4
+    assert acc.loc["A", "runs"] == 2 and acc.loc["A", "exact_rate"] == 0.5
+
+
 # ---- figures ------------------------------------------------------------------------------
 
 def test_the_k_figure_has_one_row_per_method():
-    import matplotlib
-    matplotlib.use("Agg")
     summary = pd.DataFrame(dict(method=["B", "A"], k_estimated=[5, 3], success=True))
     ax = kdb.pl.plot_k_estimates(summary)
     assert ax.collections[0].get_offsets().tolist() == [[3, 0], [5, 1]]       # sorted by k, the smallest on top
@@ -442,8 +522,6 @@ def test_the_k_figure_has_one_row_per_method():
 
 
 def test_the_k_figure_shows_the_k_error_for_several_reference_numbers():
-    import matplotlib
-    matplotlib.use("Agg")
     summary = pd.DataFrame(dict(method=["A", "A", "A", "B"], k_estimated=[5, 4, 9, 6],
                                 k_reference=[5, 4, 7, None], success=True))
     ax = kdb.pl.plot_k_estimates(summary)
@@ -456,8 +534,6 @@ def test_the_k_figure_shows_the_k_error_for_several_reference_numbers():
 
 
 def test_the_k_figure_is_about_the_runs_with_a_reference_annotation():
-    import matplotlib
-    matplotlib.use("Agg")
     from matplotlib.colors import to_rgba
     summary = pd.DataFrame(dict(method=["A", "A", "B", "B"], k_estimated=[5, 6, 9, 3],
                                 k_reference=[7, None, 7, None], success=True))
@@ -472,8 +548,6 @@ def test_the_k_figure_is_about_the_runs_with_a_reference_annotation():
 
 
 def test_the_metric_figure_ranks_the_methods_within_a_metric():
-    import matplotlib
-    matplotlib.use("Agg")
     from matplotlib.colors import to_rgba
     from matplotlib.container import BarContainer
     summary = pd.DataFrame(dict(method=["A", "B", "C", "A"], success=True, ARI=[0.2, 0.6, 0.4, 0.4],
@@ -502,69 +576,7 @@ def test_the_metric_figure_ranks_the_methods_within_a_metric():
     assert "bar: value of the metric" in [t.get_text() for t in ax.texts]      # no whisker drawn, none in the key
 
 
-def test_a_gpu_method_is_told_its_device(tmp_path, monkeypatch):
-    seen = _capture_launch(monkeypatch)
-    (tmp_path / "x.h5ad").touch()
-    with pytest.raises(_Stop):
-        kdb.run("DeepST", tmp_path / "x.h5ad", device="gpu", out_root=tmp_path, verbose=False)
-    assert seen["cmd"][-2:] == ["--device", "gpu"]
-
-
-def test_set_env_and_the_isolated_r_library(monkeypatch, tmp_path):
-    monkeypatch.setattr(config, "_overrides", {})
-    for var in ("KDB_PY_PYTHON", "KDB_R_LIB"):
-        monkeypatch.delenv(var, raising=False)
-    kdb.set_env("py", sys.executable, r_lib=tmp_path)
-    assert config.interpreter("py") == sys.executable
-    env = config.child_env("R")
-    assert env["R_LIBS"] == str(tmp_path) and env["R_LIBS_USER"] == env["R_LIBS_SITE"] == "/nonexistent"
-    assert "R_LIBS" not in config.child_env("Python")
-    monkeypatch.setenv("KDB_PY_PYTHON", str(tmp_path / "no" / "python"))     # the variable wins
-    with pytest.raises(FileNotFoundError, match="KDB_PY_PYTHON"):
-        config.interpreter("py")
-    with pytest.raises(ValueError, match="must be one of"):
-        kdb.set_env("julia", sys.executable)
-
-
-def test_natural_inputs_are_accepted(tmp_path):
-    adata = _sample(tmp_path / "s.h5ad")
-    run = _finished_run(tmp_path / "runs", tmp_path / "s.h5ad")
-    for clusters in (run, str(run), kdb.read_clusters(run)):
-        for reference in (tmp_path / "s.h5ad", adata, kdb.reference_annotation(adata), run, kdb.read_clusters(run)):
-            assert kdb.evaluate(clusters, reference)["ARI"] == 1.0     # the last two: another run
-    with pytest.raises(TypeError, match="without a 'cluster' column"):
-        kdb.evaluate(kdb.load_results(tmp_path / "runs"), adata)
-    with pytest.raises(ValueError, match="not an .h5ad file"):              # a run's csv is no reference file
-        kdb.evaluate(run, run / "cluster_results.csv")
-    with pytest.raises(KeyError, match="its columns: clusters"):
-        kdb.reference_annotation(adata, reference_key="layer")
-    with pytest.raises(ValueError, match="is an input file"):
-        kdb.read_clusters(tmp_path / "s.h5ad")
-    with pytest.raises(FileNotFoundError, match="not a run folder"):
-        kdb.metrics(tmp_path)
-
-
-def test_load_results_keeps_its_columns_and_refuses_a_missing_folder(tmp_path):
-    with pytest.raises(FileNotFoundError, match="no such folder"):
-        kdb.load_results(tmp_path / "typo")
-    (tmp_path / "empty").mkdir()
-    empty = kdb.load_results(tmp_path / "empty")
-    assert empty.empty and {"k_reference", "k_error", "ARI", "NMI", "score_error"} <= set(empty)
-    with pytest.raises(TypeError, match="table from kdb.load_results"):
-        kdb.k_accuracy(str(tmp_path))
-
-
-def test_k_accuracy_ranks_by_k_error_then_ari():
-    summary = pd.DataFrame(dict(method=["A", "A", "B", "C", "D"], success=[True, True, True, True, False],
-                                k_reference=[7, 7, 7, 7, 7], k_error=[0, -2, 1, -1, 0], ARI=[0.5, 0.3, 0.2, 0.6, 0.9]))
-    acc = kdb.k_accuracy(summary)
-    assert list(acc.index) == ["C", "A", "B"]         # |error| 1 and ARI 0.6 before |error| 1 and ARI 0.4
-    assert acc.loc["A", "runs"] == 2 and acc.loc["A", "exact_rate"] == 0.5
-
-
 def test_the_figures(tmp_path):
-    import matplotlib
-    matplotlib.use("Agg")
     adata = _sample(tmp_path / "s.h5ad")
     run = _finished_run(tmp_path / "runs", tmp_path / "s.h5ad")
     summary = kdb.load_results(tmp_path / "runs")
@@ -574,9 +586,13 @@ def test_the_figures(tmp_path):
     assert kdb.pl.plot_runtime(summary).get_ylabel() == "run time (s)"
     with pytest.raises(ValueError, match="has a value in 'wall_time_s'"):       # runs without a time record
         kdb.pl.plot_runtime(summary.assign(wall_time_s=None))
+    with pytest.raises(KeyError, match="metric= names a numeric column"):       # a mistyped name, the table is whole
+        kdb.pl.plot_runtime(summary, metric="walltime")
+    with pytest.raises(KeyError, match="'device_used': pass the whole table"):
+        kdb.pl.plot_runtime(summary.drop(columns="device_used"))
     assert kdb.pl.plot_spatial(run, adata).get_title() == "k = 2"
     fig = kdb.pl.plot_spatial_grid({"DR.SC": run, "again": kdb.read_clusters(run)}, tmp_path / "s.h5ad", ncols=2)
-    assert [a.get_title() for a in fig.axes] == ["DR.SC (k=2)", "again (k=2)"]
+    assert [a.get_title() for a in fig.axes] == ["DR.SC (k = 2)", "again (k = 2)"]
     with pytest.raises(ValueError, match="same spot barcodes"):
         kdb.pl.plot_spatial(pd.Series(["1"], index=["other"]), adata)
     with pytest.raises(KeyError, match="spatial_key"):
@@ -591,6 +607,8 @@ def test_the_figures(tmp_path):
         kdb.pl.plot_k_estimates("runs/")
 
 
+# ---- command line and docs --------------------------------------------------------------
+
 def test_cli_summarize(tmp_path, capsys):
     _sample(tmp_path / "s.h5ad")
     _finished_run(tmp_path / "runs", tmp_path / "s.h5ad")
@@ -601,8 +619,13 @@ def test_cli_summarize(tmp_path, capsys):
     cli.main(["summarize", str(tmp_path / "runs")])
     assert "not scored (1 of 2): input file not found" in capsys.readouterr().out    # once, below the table
     cli.main(["summarize", str(tmp_path / "runs"), "--h5ad", str(tmp_path / "s.h5ad")])    # matched by its name
-    with pytest.raises(SystemExit, match="without a run"):
+    with pytest.raises(SystemExit, match="input file not found"):
         cli.main(["summarize", str(tmp_path / "runs"), "--h5ad", str(tmp_path / "other.h5ad")])
+    (tmp_path / "other.h5ad").touch()
+    with pytest.raises(SystemExit, match="without a run"):       # a file is matched by its name
+        cli.main(["summarize", str(tmp_path / "runs"), "--h5ad", str(tmp_path / "other.h5ad")])
+    with pytest.raises(SystemExit, match="kdomainbench: error: .*out"):     # one line, no traceback
+        cli.main(["summarize", str(tmp_path / "runs"), "--csv", str(tmp_path / "out" / "t.csv")])
     _finished_run(tmp_path / "failed", tmp_path / "s.h5ad", success=False)
     with pytest.raises(SystemExit, match="no successful run"):    # also before the plot is attempted
         cli.main(["summarize", str(tmp_path / "failed"), "--plot", str(tmp_path / "k2.png")])
