@@ -318,7 +318,7 @@
         reg(m, cursor, { opacity: 0 }, { opacity: 0.5 }, 0.2, T_START, 'power2.out');
         reg(m, cursor, {}, { opacity: 0 }, 0.3, T_BEST + 0.1, 'power2.out');
 
-        // the best K: drop line, deep-coloured point, k̂ label
+        // the best K: drop line, deep-coloured point, its label
         const [bx, by] = pts[Ks.indexOf(K_HAT)];
         const drop = mk('line', { x1: bx, y1: by + 5, x2: bx, y2: ay0, stroke: ACC, 'stroke-width': 1.3, 'stroke-dasharray': '3 2.5' });
         g.appendChild(drop); appear(m, drop, T_BEST + 0.15);
@@ -328,7 +328,7 @@
         const best = mk('circle', { cx: bx, cy: by, r: 4.6, fill: ACC });
         g.appendChild(best);
         reg(m, best, { opacity: 0, scale: 0.6, svgOrigin: bx + ' ' + by }, { opacity: 1, scale: 1 }, 0.35, T_BEST, 'back.out(2)');
-        const kl = label(bx + 11, by - 7, 'k̂ = ' + K_HAT, 'start', 11, ACC, '700');
+        const kl = label(bx + 11, by - 7, 'K = ' + K_HAT, 'start', 11, ACC, '700');
         g.appendChild(kl); appear(m, kl, T_BEST + 0.2, 0.35);
         scenes.push({ num: 2, title: 'Estimate k', g, morphs: m, hold: 2.4, cut: true, tick: paint });
       })();
