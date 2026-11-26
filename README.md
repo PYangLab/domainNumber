@@ -59,23 +59,6 @@ On a remote server, forward the port first: `ssh -L 8000:127.0.0.1:8000 <user>@<
 The site has a quickstart, tutorials, how-to guides (your own data, a cluster, troubleshooting),
 an explanation of how the methods are run, and the API and command-line reference.
 
-## Citation and contributing
-
-The paper is in preparation. Until it is published, cite the repository, the package version
-and the commit, and the publication of each method you run (`docs/citation.md`).
-`CONTRIBUTING.md` says how to report a bug, set up a development copy, run the checks
-(`.github/workflows/checks.yml` runs the unit tests and the site build on every push) and
-propose a change. `CHANGELOG.md` lists the changes.
-
-## Third-party code
-
-* `src/kdomainbench/methods/bnpspace_R/`: BNPSpace's code, MIT license (its `LICENSE` file).
-* The PASTE section of `src/kdomainbench/metric_scripts/scs.py`: copied from
-  raphael-group/paste_reproducibility, whose repository has no license file.
-* `docs/javascripts/vendor/gsap.min.js`: GSAP 3.12.5, GreenSock Standard License, used by the
-  documentation site only.
-
-This repository is licensed under GPL-3.0 (see `LICENSE`).
 
 ## Layout
 
