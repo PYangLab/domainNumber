@@ -41,25 +41,6 @@ kdomainbench check                        # checks that every environment starts
 To score and plot finished runs on macOS or Windows, `pip install -e .` in the cloned folder,
 with Python 3.10 or later, is enough. The documentation has the details (`docs/installation.md`).
 
-## Documentation
-
-The repository is private, so the documentation site is built and viewed locally, with
-Python 3.11 or later:
-
-```bash
-python -m venv .venv-docs && source .venv-docs/bin/activate
-pip install -r docs/requirements.txt
-mkdocs serve                      # open http://127.0.0.1:8000
-```
-
-On a remote server, forward the port first: `ssh -L 8000:127.0.0.1:8000 <user>@<server>`.
-`mkdocs build` writes a static copy to `site/`. Open `site/index.html` directly (search needs
-`mkdocs serve`).
-
-The site has a quickstart, tutorials, how-to guides (your own data, a cluster, troubleshooting),
-an explanation of how the methods are run, and the API and command-line reference.
-
-
 ## Layout
 
 ```
