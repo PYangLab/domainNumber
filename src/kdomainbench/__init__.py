@@ -1,0 +1,17 @@
+"""kdomainbench: benchmark of spatial-domain number (k) estimation methods.
+
+    import kdomainbench as kdb
+    clusters = kdb.run("SpaGCN", "data/D3_151509_5k.h5ad", kmax=30)
+"""
+__version__ = "0.1.0"                           # first: runner records it, and pyproject.toml reads it
+
+from .config import set_env
+from .paper_metrics import MetricsFailed, metrics
+from .registry import METHODS, Method, get_method, list_methods
+from .results import evaluate, k_accuracy, load_results, read_clusters, reference_annotation
+from .runner import MethodFailed, run, run_all
+from . import plotting as pl
+
+__all__ = ["run", "run_all", "list_methods", "get_method", "Method", "METHODS", "set_env", "MethodFailed",
+           "read_clusters", "reference_annotation", "evaluate", "metrics", "MetricsFailed", "load_results",
+           "k_accuracy", "pl"]
