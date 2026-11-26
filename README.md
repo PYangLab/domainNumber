@@ -3,6 +3,8 @@
 Benchmark of methods that estimate the **number of spatial domains (k)** in spatial
 transcriptomics, behind one interface.
 
+**Documentation and tutorials: <https://pyanglab.github.io/domainNumber/>**
+
 Many spatial clustering methods choose the number of domains themselves, but each needs its
 own software, input format and settings, which makes them hard to run and to compare.
 kDomainBench runs ten such methods from one Python call or one command, each in the
@@ -39,7 +41,7 @@ kdomainbench check                        # checks that every environment starts
 ```
 
 To score and plot finished runs on macOS or Windows, `pip install -e .` in the cloned folder,
-with Python 3.10 or later, is enough. The documentation has the details (`docs/installation.md`).
+with Python 3.10 or later, is enough. [Installation](https://pyanglab.github.io/domainNumber/installation.html) has the details.
 
 ## Layout
 
