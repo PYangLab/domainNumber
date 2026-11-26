@@ -41,11 +41,6 @@ The repository holds the package (`src/kdomainbench/`), one script per method
 (`src/kdomainbench/methods/`), the environment files (`envs/`) and the example file
 (`data/`, see [Example data](#example-data)).
 
-!!! note "Private repository"
-    The repository is private. `git clone` asks for your GitHub login and works only for
-    members. Use a [personal access token](https://github.com/settings/tokens) as the password,
-    or clone over SSH (`git@github.com:PYangLab/domainNumber.git`).
-
 ## Step 2: Create the environments
 
 Which method runs where:
