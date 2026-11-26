@@ -51,16 +51,9 @@ Another run in its place compares two methods
 | `NMI` | normalized mutual information between the labels and the annotation, with the arithmetic mean of the two entropies as the norm | 1 |
 | `n_spots_scored` | spots that have both a label and an annotation. ARI and NMI use these | |
 
-??? note "How to read k error, ARI and NMI"
-    * `k_error` is the main score of the benchmark, which asks how many domains there are.
-      ARI and NMI tell how well the domains found agree with the annotated ones.
-    * The two measure different things: a method can be close to the reference k with a low
-      ARI, and the reverse.
-    * ARI and NMI do not depend on the label names. `0, 1, 2` and `Layer1, Layer2, Layer3` are
-      compared by grouping only.
-    * Labels and annotation are matched by spot barcode. `kdb.evaluate` raises a `ValueError`
-      when they share no spot or when a barcode occurs twice. A partial match is scored without
-      a warning, so check `n_spots_scored`.
+Labels and annotation are matched by spot barcode. `kdb.evaluate` raises a `ValueError` when
+they share no spot or when a barcode occurs twice. A partial match is scored without a warning,
+so check `n_spots_scored`.
 
 ## Score many runs
 
@@ -202,10 +195,5 @@ mean and a whisker their standard deviation.
       `metric.log` in the run folder.
     * `metric.csv` is read back as it is. After the annotation changes, call
       `kdb.metrics(run, recompute=True)`.
-
-## Comparing methods
-
-Use the same `kmax` for every method (the benchmark uses 30), and several datasets before
-ranking methods.
 
 Next: [Benchmark the ten methods](benchmark.md).

@@ -60,11 +60,6 @@ Each method prints its output and, when it finishes, one line with its estimated
 that fails is reported as `failed` or `not run` and does not stop the others
 ([Run several methods](../tutorials/run.md#run-several-methods)).
 
-!!! warning "On a remote server"
-    The run stops when the connection to the server closes. `tmux` keeps a terminal session
-    running after you disconnect: type `tmux`, start Python in it, and after you reconnect type
-    `tmux attach`. On a cluster, submit the run as a job instead ([Run on a cluster](cluster.md)).
-
 Each call runs the methods it names and leaves the other runs in `my_results/` alone, so more
 methods can follow later, for example `methods=["PRECAST", "SC.MEB"]`. Without `methods`, all
 ten run.
@@ -178,7 +173,3 @@ kdb.k_accuracy(summary)
 ```
 
 [Evaluate a run](../tutorials/evaluate.md) explains the scores.
-
-??? note "Not a Visium sample?"
-    The method scripts assume the Visium spot grid.
-    [Run a method](../tutorials/run.md#inputs) says what to change for other platforms.

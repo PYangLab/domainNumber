@@ -7,32 +7,19 @@ R for the R methods. kDomainBench starts each method in the right one.
 | You need | For |
 |---|---|
 | Linux (x86-64) | running the methods. The environments are built for it |
-| conda or mamba | the two Python environments, about 12 GB of disk |
+| conda or mamba ([Miniforge](https://conda-forge.org/download/)) | the two Python environments, about 12 GB of disk |
 | A C++ compiler, `cmake` and `git` | building `louvain` for SpaGCN, fetching SpatialDE2, and the R packages |
 | R ≥ 4.4 | the six R methods. The four Python methods run without it |
 | R ≥ 4.5 with Bioconductor ≥ 3.22 (optional) | the twelve metrics of the paper ([The metric packages](#the-metric-packages)) |
-| An NVIDIA GPU (optional) | CellCharter, DeepST and SpatialDE2 can use one |
-
-!!! info "Before you start"
-    Most users install kDomainBench on a Linux server or cluster. If you do not manage the
-    server yourself, ask its administrators whether conda (or mamba) and R are available,
-    for example as modules (`module avail`). Without conda, install
-    [Miniforge](https://conda-forge.org/download/) in your home folder, then run
-    `conda init bash` once and open a new terminal. For a cluster, see also
-    [Run on a cluster](how-to/cluster.md).
+| An NVIDIA GPU with driver ≥ 525 (optional) | CellCharter, DeepST and SpatialDE2 can use one. The GPU libraries come with the environments |
 
 !!! note "macOS and Windows"
     The methods run on Linux only. Scoring and plotting finished runs works on any system with
-    Python 3.10 or later (tested on macOS). The Python that comes with macOS is 3.9
-    (`python3 --version` shows it), so install Miniforge first, as in Before you start, with
-    `conda init zsh`. Then, in the cloned folder:
+    Python 3.10 or later. In the cloned folder:
 
     ```bash
     python3 -m venv .venv && .venv/bin/pip install --upgrade pip && .venv/bin/pip install -e .
     ```
-
-    For the twelve metrics of the paper, also name a Python with anndata, networkx, scipy and
-    pandas below 3 in `KDB_PY_PYTHON` ([The metric packages](#the-metric-packages)).
 
 !!! tip "Summary"
     ```bash
@@ -76,28 +63,16 @@ bash envs/install_envs.sh
 ```
 
 This creates the conda environments `kdb_py` and `kdb_spatialde`, with the package versions
-fixed in `envs/`, and installs the `kdomainbench` package into `kdb_py`. The script runs these
-three commands, which you can also run yourself:
-
-```bash title="terminal"
-conda env create -n kdb_py        -f envs/kdb_py.yml
-conda env create -n kdb_spatialde -f envs/kdb_spatialde.yml
-conda run -n kdb_py pip install --no-deps -e .
-```
+fixed in `envs/`, and installs the `kdomainbench` package into `kdb_py`. The same environments
+run on machines with and without a GPU.
 
 `KDB_ENVS_DIR=/project/envs bash envs/install_envs.sh` creates them in that folder instead of
-conda's default one, for example to keep them out of a small home folder. Activate `kdb_py`
-then by its path: `conda activate /project/envs/kdb_py`.
-
-!!! success "One set of environments for CPU and GPU machines"
-    On a GPU machine the environments need only an NVIDIA driver (≥ 525). The GPU libraries
-    come with them, so no separate CUDA install is needed. Without a GPU, they run on the CPU.
+conda's default one. Activate `kdb_py` then by its path: `conda activate /project/envs/kdb_py`.
 
 ### R
 
-The R methods use the R you already have (R ≥ 4.4, with Bioconductor 3.19 or later, the
-repository of R packages for genomics).
-`Rscript -e 'R.version.string'` prints its version. Install the packages the methods need:
+The R methods use the R you already have (R ≥ 4.4, with Bioconductor 3.19 or later).
+Install the packages the methods need:
 
 ```bash title="terminal"
 Rscript envs/install_r_packages.R
