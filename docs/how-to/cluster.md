@@ -15,9 +15,8 @@ Rscript envs/install_r_packages.R                # the R packages, into your R
 /project/envs/kdb_py/bin/kdomainbench check
 ```
 
-conda and pip keep download caches in your home folder, which `CONDA_PKGS_DIRS` and
-`PIP_CACHE_DIR` move. `kdomainbench check` also downloads the reader the R methods need, so run
-it once on a node with internet ([Troubleshooting](troubleshooting.md#the-first-r-run-is-slow-or-fails-without-internet)).
+`kdomainbench check` also downloads the reader the R methods need, so run it once on a node
+with internet ([Troubleshooting](troubleshooting.md#the-first-r-run-is-slow-or-fails-without-internet)).
 
 ## 2. Submit one job per method
 
