@@ -1,7 +1,7 @@
 # Contributing
 
 Questions, bug reports and changes are welcome as issues and pull requests on GitHub:
-<https://github.com/liuchunlei0430/kDomainBench/issues>.
+<https://github.com/PYangLab/domainNumber/issues>.
 
 ## Ask a question or report a bug
 

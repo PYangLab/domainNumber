@@ -23,7 +23,7 @@ R for the R methods. kDomainBench starts each method in the right one.
 
 !!! tip "Summary"
     ```bash
-    git clone https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
+    git clone https://github.com/PYangLab/domainNumber.git && cd domainNumber
     bash envs/install_envs.sh                 # the two Python environments
     Rscript envs/install_r_packages.R         # the R packages, into your R
     conda activate kdb_py
@@ -33,8 +33,8 @@ R for the R methods. kDomainBench starts each method in the right one.
 ## Step 1: Get the code
 
 ```bash title="terminal"
-git clone https://github.com/liuchunlei0430/kDomainBench.git
-cd kDomainBench
+git clone https://github.com/PYangLab/domainNumber.git
+cd domainNumber
 ```
 
 The repository holds the package (`src/kdomainbench/`), one script per method
@@ -44,7 +44,7 @@ The repository holds the package (`src/kdomainbench/`), one script per method
 !!! note "Private repository"
     The repository is private. `git clone` asks for your GitHub login and works only for
     members. Use a [personal access token](https://github.com/settings/tokens) as the password,
-    or clone over SSH (`git@github.com:liuchunlei0430/kDomainBench.git`).
+    or clone over SSH (`git@github.com:PYangLab/domainNumber.git`).
 
 ## Step 2: Create the environments
 

@@ -6,7 +6,7 @@ the dataset.
 ## The benchmark
 
 The kDomainBench paper is in preparation. This page will give its reference once it is
-available. Until then, name the repository, <https://github.com/liuchunlei0430/kDomainBench>,
+available. Until then, name the repository, <https://github.com/PYangLab/domainNumber>,
 the package version (`kdb.__version__`) and the commit you used (`git rev-parse --short HEAD`
 in the cloned folder).
 

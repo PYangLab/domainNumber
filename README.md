@@ -31,7 +31,7 @@ The methods run on Linux (x86-64) and need conda or mamba, R ≥ 4.4, a C++ comp
 and `git`:
 
 ```bash
-git clone https://github.com/liuchunlei0430/kDomainBench.git && cd kDomainBench
+git clone https://github.com/PYangLab/domainNumber.git && cd domainNumber
 bash envs/install_envs.sh                 # the two Python environments, with kdomainbench in kdb_py
 Rscript envs/install_r_packages.R         # the R packages, into your R
 conda activate kdb_py
@@ -75,7 +75,7 @@ propose a change. `CHANGELOG.md` lists the changes.
 * `docs/javascripts/vendor/gsap.min.js`: GSAP 3.12.5, GreenSock Standard License, used by the
   documentation site only.
 
-The repository itself has no license yet.
+This repository is licensed under GPL-3.0 (see `LICENSE`).
 
 ## Layout
 
